@@ -126,7 +126,7 @@ function makeDayBox(day, plan) {
     plan.days[day] = ta.value; save();
   });
 
-  // markiere als Drop-Ziel (für Pointer-Fallback)
+  // Dragover erlauben (für Maus/klassisches DnD)
   box.addEventListener("dragover", e => e.preventDefault());
 
   box.appendChild(h);
@@ -157,7 +157,7 @@ function renderExercises() {
   });
 }
 
-$addExercise.addEventListener("click", () => {
+document.getElementById("addExercise").addEventListener("click", () => {
   const v = $newExercise.value.trim();
   if (!v) return;
   data.exercises.push(v);
@@ -165,11 +165,10 @@ $addExercise.addEventListener("click", () => {
   save(); renderExercises();
 });
 $newExercise.addEventListener("keydown", e => {
-  if (e.key === "Enter") $addExercise.click();
+  if (e.key === "Enter") document.getElementById("addExercise").click();
 });
 
 // ---- Pointer-Drag (funktioniert in PWA/Safari auf iPad) ----
-let dragState = null;
 function enablePointerDrag(el, label) {
   el.addEventListener("pointerdown", (e) => {
     e.preventDefault();
@@ -184,7 +183,6 @@ function enablePointerDrag(el, label) {
 
     const onMove = (ev) => {
       moveTo(ev.pageX, ev.pageY);
-      // Drop-Ziel hervorheben
       highlightDrop(ev.clientX, ev.clientY);
     };
 
@@ -199,7 +197,6 @@ function enablePointerDrag(el, label) {
         const old = plan.days[day] || "";
         const text = old ? old + "\n" + label : label;
         plan.days[day] = text;
-        // Textarea aktualisieren
         const ta = target.querySelector("textarea");
         if (ta) ta.value = text;
         save();
