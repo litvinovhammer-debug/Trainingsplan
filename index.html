@@ -1,82 +1,68 @@
-<!-- Manifest & Icons -->
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
-<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
-
-<!-- Status-/UI-Farbe: schwarz, damit keine grüne Leiste -->
-<meta name="theme-color" content="#000000">
-
-
-<!DOCTYPE html>
+<!doctype html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title>Trainingsplan</title>
 
-  <!-- Manifest & Icons -->
+  <!-- PWA / Icons -->
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
   <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
-  <meta name="theme-color" content="#00FF00">
+  <meta name="theme-color" content="#000000">
 
-<!DOCTYPE html>
-<html lang="de">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Trainingsplan</title>
-
-  <!-- PWA / Styles -->
-  <link rel="manifest" href="manifest.webmanifest">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="app">
-
+  <div id="app">
     <!-- Linke Spalte: Athleten -->
     <aside class="col col-left">
-      <header class="bar">
-        <h1 class="crtBlue">ATHLETEN</h1>
-        <button id="addAthlete" class="btn small crtAmber">+</button>
-      </header>
-      <ul id="athleteList" class="list"></ul>
+      <div class="panel panel-left">
+        <div class="panel-header left">ATHLETEN
+          <button id="addAthleteBtn" class="tiny-btn glow-blue" title="Athlet hinzufügen">＋</button>
+        </div>
+        <div id="athleteList" class="list"></div>
+      </div>
     </aside>
 
-    <!-- Mitte: Pläne + Wochenplan -->
-    <main class="col col-main">
-      <header class="bar">
-        <div id="planTabs" class="tabs"></div>
-        <button id="addPlan" class="btn small crtAmber">+</button>
-      </header>
+    <!-- Mitte: Wochenplan -->
+    <main class="col col-center">
+      <div class="panel panel-mid">
+        <div class="panel-header mid">
+          <span id="planTitle">WOCHENPLAN</span>
+          <button id="newPlanBtn" class="tiny-btn glow-green" title="Neuer Plan">Neuer&nbsp;Plan</button>
+        </div>
 
-      <!-- Wochenplan (wird von app.js gefüllt) -->
-      <section id="week" class="week">
-        <!-- app.js rendert hier:
-             <div class="topRow"> … 3 x .day … </div>
-             <div class="botRow"> … 4 x .day … </div>
-        -->
-      </section>
+        <div id="weekGrid" class="week-grid">
+          <!-- Cards werden von JS befüllt -->
+        </div>
+      </div>
     </main>
 
     <!-- Rechte Spalte: Übungen -->
     <aside class="col col-right">
-      <header class="bar">
-        <h1 class="crtAmber">ÜBUNGEN</h1>
-      </header>
+      <div class="panel panel-right">
+        <div class="panel-header right">ÜBUNGEN
+          <button id="addExerciseBtn" class="tiny-btn glow-yellow" title="Neue Übung">＋</button>
+        </div>
 
-      <ul id="exerciseList" class="list"></ul>
+        <div class="new-ex-row">
+          <input id="newExerciseInput" placeholder="Neue Übung…" autocomplete="off">
+          <button id="commitExerciseBtn" class="btn glow-yellow">Hinzufügen</button>
+        </div>
 
-      <div class="add-row">
-        <input id="newExercise" placeholder="Neue Übung" />
-        <button id="addExercise" class="btn small crtAmber">+</button>
+        <div id="exerciseList" class="list"></div>
       </div>
     </aside>
-
   </div>
 
   <script src="app.js"></script>
+  <script>
+    // Service Worker registrieren (falls noch nicht aktiv)
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').catch(()=>{});
+    }
+  </script>
 </body>
 </html>
