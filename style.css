@@ -1,128 +1,172 @@
-/* Grundlook: Retro CRT */
-:root{
-  --crtGreen: #00ff66;
-  --crtBlue: #88caff;
-  --crtAmber:#ffd15a;
-  --ink: #00ff66;
-  --bg:#000;
-  --line:#1a1a1a;
-  --glow: 0 0 8px var(--ink);
-}
-*{box-sizing:border-box}
-html,body{height:100%}
-body{
-  margin:0;
-  background:var(--bg);
-  color:var(--ink);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+/* Grundlayout */
+html, body {
+  height: 100%;
+  margin: 0;
+  background: #000;
+  color: #d0f0ff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
 }
 
-/* Layout: Athleten (schmal) | Pläne (schmal) | Woche (groß) | Übungen (schmal) */
-.container{
-  height:100vh;
-  display:grid;
-  grid-template-columns: 12% 12% 64% 12%; /* Mitte ~20% größer als vorher */
-  gap:0;
+#app {
+  display: grid;
+  grid-template-columns: 15% 70% 15%;
+  grid-template-rows: 100vh;
+  gap: 12px;
+  padding: 12px;
+  box-sizing: border-box;
 }
 
 /* Spalten */
-.column{
-  border-right:2px solid var(--line);
-  padding:10px;
-  overflow:auto;
-}
-.column.slim{ /* nur zur Lesbarkeit */
-}
-.column.large{
-  border-right:2px solid var(--line);
-}
-
-/* Headline + Buttons */
-h2{
-  margin:0 0 8px 0;
-  font-size:16px;
-  color:var(--crtGreen);
-  text-shadow:0 0 12px var(--crtGreen);
-  display:flex; align-items:center; justify-content:space-between;
-}
-button, .pill{
-  background:transparent;
-  color:var(--crtGreen);
-  border:1px solid var(--crtGreen);
-  padding:4px 8px;
-  font:inherit;
-  cursor:pointer;
-  border-radius:6px;
-  box-shadow:0 0 8px rgba(0,255,102,.3) inset;
-}
-button.mini{padding:1px 6px}
-
-ul{list-style:none; padding:0; margin:0}
-li.item{
-  border:1px solid var(--crtBlue);
-  color:var(--crtBlue);
-  margin:6px 0;
-  padding:6px 8px;
-  border-radius:8px;
-  display:flex; align-items:center; gap:6px;
-  justify-content:space-between;
-  background:rgba(255,255,255,0.02);
-  text-shadow:0 0 6px var(--crtBlue);
-}
-li.item.active{outline:2px solid var(--crtGreen)}
-.item .title{flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
-.item .row-btns{display:flex; gap:6px}
-.row-btns .del{
-  border-color:#ff5c5c; color:#ff5c5c; box-shadow:0 0 6px rgba(255,92,92,.25) inset;
-}
-.row-btns .rename{
-  border-color:var(--crtAmber); color:var(--crtAmber);
-  box-shadow:0 0 6px rgba(255,209,90,.25) inset;
+.col { height: 100%; overflow: hidden; }
+.panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #0a0a0a;
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 2px #151515;
 }
 
-/* Übungen */
-#exercise-col h2{ color:var(--crtAmber); text-shadow:0 0 12px var(--crtAmber) }
-#exerciseList li{ border-color:var(--crtAmber); color:var(--crtAmber) }
-.exercise-add{ margin-bottom:8px }
-#newExerciseInput{
-  width:100%; padding:6px 8px; border-radius:8px;
-  border:1px solid var(--crtAmber); background:#000; color:var(--crtAmber);
-  box-shadow:0 0 8px rgba(255,209,90,.25) inset;
+/* Panel-Header */
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-bottom: 1px solid #111;
+  letter-spacing: .5px;
+}
+.panel-header.left  { color: #69c3ff; text-shadow: 0 0 6px rgba(105,195,255,.8); }
+.panel-header.mid   { color: #7CFF7C; text-shadow: 0 0 6px rgba(124,255,124,.8); }
+.panel-header.right { color: #ffd65a; text-shadow: 0 0 6px rgba(255,214,90,.8); }
+
+/* Buttons */
+.tiny-btn {
+  font-size: 14px;
+  background: transparent;
+  color: #fff;
+  border: 1px solid #333;
+  border-radius: 6px;
+  padding: 2px 8px;
+  cursor: pointer;
+}
+.btn {
+  font-size: 14px;
+  background: #181818;
+  border: 1px solid #333;
+  color: #fff;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+.glow-blue   { box-shadow: 0 0 10px rgba(105,195,255,.5); }
+.glow-green  { box-shadow: 0 0 10px rgba(124,255,124,.5); }
+.glow-yellow { box-shadow: 0 0 10px rgba(255,214,90,.5); }
+
+/* Listen */
+.list {
+  padding: 10px;
+  overflow: auto;
+  flex: 1 1 auto;
 }
 
-/* Wochenplan 2 Reihen: oben 3, unten 4 */
-.week{display:flex; flex-direction:column; gap:12px; height:calc(100% - 28px)}
-.week-row{display:grid; gap:12px}
-.week-row.top{ grid-template-columns: repeat(3, 1fr); }
-.week-row.bottom{ grid-template-columns: repeat(4, 1fr); }
-
-/* Tageskacheln */
-.day{
-  border:1px solid var(--crtGreen);
-  border-radius:10px;
-  padding:8px;
-  min-height:180px;
-  background:rgba(255,255,255,0.02);
-  position:relative;
-  box-shadow:0 0 10px rgba(0,255,102,.15) inset;
+.col-left .list .athlete {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #1b2a33;
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  background: #0c1116;
+  color: #a7dbff;
+  text-shadow: 0 0 6px rgba(105,195,255,.6);
+  cursor: pointer;
 }
-.day h3{
-  margin:0 0 6px 0;
-  font-size:14px;
-  color:var(--crtGreen);
-  text-shadow:0 0 10px var(--crtGreen);
+.athlete.active { outline: 2px solid #69c3ff; }
+
+.athlete input {
+  background: transparent; border: none; color: inherit; width: 100%;
 }
 
-/* Texteingabe im Tag */
-.day textarea{
-  width:100%;
-  height:calc(100% - 22px);
-  resize:none;
-  border:none; outline:none;
-  background:transparent;
-  color:var(--crtGreen);
-  font:inherit; line-height:1.35;
+/* Neue Übung Reihe */
+.new-ex-row {
+  padding: 10px; display: flex; gap: 8px; border-bottom: 1px solid #111;
+}
+#newExerciseInput {
+  flex: 1 1 auto;
+  background: #0f0f0f;
+  color: #ffd65a;
+  border: 1px solid #3a2f04;
+  border-radius: 6px;
+  padding: 6px 8px;
+  outline: none;
+  text-shadow: 0 0 6px rgba(255,214,90,.6);
 }
 
-/* Drag Ziel Hervorhebung */
-.day.drag-over{ outline:2px dashed var(--crtAmber); }
+/* Übungen rechts */
+.exercise {
+  position: relative;
+  border: 1px solid #3a2f04;
+  background: #131007;
+  color: #ffe07a;
+  border-radius: 8px;
+  padding: 8px 34px 8px 10px; /* Platz für × */
+  margin-bottom: 8px;
+  text-shadow: 0 0 6px rgba(255,214,90,.6);
+  user-select: none;
+}
+.exercise .delete-btn {
+  position: absolute;
+  right: 6px; top: 6px;
+  background: #b91c1c;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  width: 22px; height: 22px;
+  line-height: 22px; text-align:center;
+  font-weight: bold; cursor: pointer;
+}
+.exercise .delete-btn:hover { background: #991b1b; }
+
+/* Woche */
+.week-grid {
+  padding: 12px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: minmax(210px, 1fr);
+  gap: 14px;
+  overflow: auto;
+}
+.day-card {
+  display: flex; flex-direction: column;
+  background: #0a0a0a;
+  border: 1px solid #103b10;
+  border-radius: 12px;
+  box-shadow: inset 0 0 0 2px #0c230c;
+}
+.day-head {
+  padding: 8px 10px;
+  color: #7CFF7C;
+  text-shadow: 0 0 6px rgba(124,255,124,.7);
+  border-bottom: 1px solid #0f2c0f;
+}
+.day-body { flex: 1 1 auto; padding: 8px; }
+.day-text {
+  width: 100%; height: 100%;
+  resize: none; outline: none;
+  background: #060a06;
+  color: #a0ffa0;
+  text-shadow: 0 0 6px rgba(124,255,124,.55);
+  border: 1px solid #103b10; border-radius: 8px;
+  padding: 8px;
+}
+
+/* Drag-Hilfen */
+.day-text.drag-over { box-shadow: 0 0 0 2px #7cff7c; }
+.exercise.drag-ghost { opacity: .6; }
+
+/* Scrollbar subtil */
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-thumb { background: #1a1a1a; border-radius: 8px; }
+*::-webkit-scrollbar-track { background: #0a0a0a; }
