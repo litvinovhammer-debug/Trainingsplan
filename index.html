@@ -1,51 +1,78 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title>Trainingsplan</title>
-  <link rel="stylesheet" href="style.css" />
-  <link rel="manifest" href="manifest.webmanifest" />
+
+  <!-- PWA / Icons -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+  <meta name="theme-color" content="#000000">
+
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="container">
-
-    <!-- Athleten -->
-    <section class="column slim" id="athlete-col">
-      <h2>ATHLETEN <button class="mini" onclick="addAthlete()">+</button></h2>
-      <ul id="athleteList"></ul>
-    </section>
-
-    <!-- Pläne (abhängig vom Athleten) -->
-    <section class="column slim" id="plan-col">
-      <h2>PLÄNE <button class="mini" onclick="addPlan()">+</button></h2>
-      <ul id="planList"></ul>
-    </section>
-
-    <!-- Wochenplan -->
-    <section class="column large" id="week-col">
-      <h2>WOCHENPLAN</h2>
-
-      <div id="week" class="week">
-        <div class="week-row top" id="row-top"></div>
-        <div class="week-row bottom" id="row-bottom"></div>
+  <div id="app">
+    <!-- Linke Spalte: Athleten -->
+    <aside class="col col-left">
+      <div class="panel panel-left">
+        <div class="panel-header left">ATHLETEN
+          <button id="addAthleteBtn" class="tiny-btn glow-blue" title="Athlet hinzufügen">＋</button>
+        </div>
+        <div id="athleteList" class="list"></div>
       </div>
-    </section>
+    </aside>
 
-    <!-- Übungen -->
-    <section class="column" id="exercise-col">
-      <h2>ÜBUNGEN 
-        <button class="mini" onclick="addExercise()">+</button>
-      </h2>
-      <div class="exercise-add">
-        <input id="newExerciseInput" placeholder="Neue Übung…"
-               onkeydown="if(event.key==='Enter'){ addExercise(); }" />
+    <!-- NEU: Pläne-Spalte (zeigt Pläne des ausgewählten Athleten) -->
+    <aside class="col col-plans">
+      <div class="panel panel-plans">
+        <div class="panel-header left">PLÄNE
+          <button id="addPlanBtn" class="tiny-btn glow-blue" title="Neuen Plan anlegen">＋</button>
+        </div>
+        <div id="planList" class="list"></div>
       </div>
-      <ul id="exerciseList"></ul>
-    </section>
+    </aside>
 
+    <!-- Mitte: Wochenplan -->
+    <main class="col col-center">
+      <div class="panel panel-mid">
+        <div class="panel-header mid">
+          <span id="planTitle">WOCHENPLAN</span>
+          <button id="newPlanBtn" class="tiny-btn glow-green" title="Neuer Plan">Neuer&nbsp;Plan</button>
+        </div>
+
+        <div id="weekGrid" class="week-grid">
+          <!-- Cards werden von JS befüllt -->
+        </div>
+      </div>
+    </main>
+
+    <!-- Rechte Spalte: Übungen -->
+    <aside class="col col-right">
+      <div class="panel panel-right">
+        <div class="panel-header right">ÜBUNGEN
+          <button id="addExerciseBtn" class="tiny-btn glow-yellow" title="Neue Übung">＋</button>
+        </div>
+
+        <div class="new-ex-row">
+          <input id="newExerciseInput" placeholder="Neue Übung…" autocomplete="off">
+          <button id="commitExerciseBtn" class="btn glow-yellow">Hinzufügen</button>
+        </div>
+
+        <div id="exerciseList" class="list"></div>
+      </div>
+    </aside>
   </div>
 
   <script src="app.js"></script>
+  <script>
+    // Service Worker registrieren (falls noch nicht aktiv)
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').catch(()=>{});
+    }
+  </script>
 </body>
 </html>
