@@ -1,4 +1,4 @@
-// ===== Persistenz =====
+.// ===== Persistenz =====
 const LS_KEY = "trainer-data-v1";
 let data = (() => {
   try { return JSON.parse(localStorage.getItem(LS_KEY) || "{}"); }
@@ -135,25 +135,34 @@ function makeDayBox(day, plan) {
 }
 
 // ===== Übungen + Pointer-Drag Fallback =====
+
 function renderExercises() {
-  $exerciseList.innerHTML = "";
-  data.exercises.forEach((ex, i) => {
-    const li = document.createElement("li");
-    li.style.touchAction = "none"; // wichtig für iPad
-    const text = document.createElement("span");
-    text.textContent = ex;
-    li.appendChild(text);
+  const list = document.getElementById("exerciseList");
+  list.innerHTML = "";
+  exercises.forEach((exercise, i) => {
+    const div = document.createElement("div");
+    div.className = "exercise";
+    div.draggable = true;
+    div.textContent = exercise;
+    div.dataset.index = i;
 
-    // Pointer-Fallback aktivieren
-    enablePointerDrag(li, ex);
+    // --- Löschen-Button hinzufügen ---
+    const delBtn = document.createElement("button");
+    delBtn.textContent = "×";
+    delBtn.className = "delete-btn";
+    delBtn.onclick = () => {
+      exercises.splice(i, 1);   // Übung löschen
+      saveData();
+      renderExercises();
+    };
 
-    // optional: löschen per Doppeltipp
-    li.addEventListener("dblclick", () => {
-      if (!confirm(`„${ex}“ löschen?`)) return;
-      data.exercises.splice(i,1); save(); renderExercises();
+    div.appendChild(delBtn);
+    list.appendChild(div);
+
+    // Drag Events
+    div.addEventListener("dragstart", e => {
+      e.dataTransfer.setData("text/plain", exercise);
     });
-
-    $exerciseList.appendChild(li);
   });
 }
 
