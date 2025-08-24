@@ -1,74 +1,128 @@
-body {
-  margin: 0;
-  background: black;
-  color: #00FF00;
-  font-family: monospace;
+/* Grundlook: Retro CRT */
+:root{
+  --crtGreen: #00ff66;
+  --crtBlue: #88caff;
+  --crtAmber:#ffd15a;
+  --ink: #00ff66;
+  --bg:#000;
+  --line:#1a1a1a;
+  --glow: 0 0 8px var(--ink);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
 }
 
-.container {
-  display: grid;
-  grid-template-columns: 15% 15% 55% 15%;
-  height: 100vh;
+/* Layout: Athleten (schmal) | Pläne (schmal) | Woche (groß) | Übungen (schmal) */
+.container{
+  height:100vh;
+  display:grid;
+  grid-template-columns: 12% 12% 64% 12%; /* Mitte ~20% größer als vorher */
+  gap:0;
 }
 
-.column {
-  border-right: 2px solid #222;
-  padding: 10px;
-  box-sizing: border-box;
+/* Spalten */
+.column{
+  border-right:2px solid var(--line);
+  padding:10px;
+  overflow:auto;
+}
+.column.slim{ /* nur zur Lesbarkeit */
+}
+.column.large{
+  border-right:2px solid var(--line);
 }
 
-.column.large {
-  border-right: 2px solid #222;
-  padding: 10px;
+/* Headline + Buttons */
+h2{
+  margin:0 0 8px 0;
+  font-size:16px;
+  color:var(--crtGreen);
+  text-shadow:0 0 12px var(--crtGreen);
+  display:flex; align-items:center; justify-content:space-between;
+}
+button, .pill{
+  background:transparent;
+  color:var(--crtGreen);
+  border:1px solid var(--crtGreen);
+  padding:4px 8px;
+  font:inherit;
+  cursor:pointer;
+  border-radius:6px;
+  box-shadow:0 0 8px rgba(0,255,102,.3) inset;
+}
+button.mini{padding:1px 6px}
+
+ul{list-style:none; padding:0; margin:0}
+li.item{
+  border:1px solid var(--crtBlue);
+  color:var(--crtBlue);
+  margin:6px 0;
+  padding:6px 8px;
+  border-radius:8px;
+  display:flex; align-items:center; gap:6px;
+  justify-content:space-between;
+  background:rgba(255,255,255,0.02);
+  text-shadow:0 0 6px var(--crtBlue);
+}
+li.item.active{outline:2px solid var(--crtGreen)}
+.item .title{flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.item .row-btns{display:flex; gap:6px}
+.row-btns .del{
+  border-color:#ff5c5c; color:#ff5c5c; box-shadow:0 0 6px rgba(255,92,92,.25) inset;
+}
+.row-btns .rename{
+  border-color:var(--crtAmber); color:var(--crtAmber);
+  box-shadow:0 0 6px rgba(255,209,90,.25) inset;
 }
 
-h2 {
-  font-size: 16px;
-  color: #0f0;
-  text-shadow: 0 0 8px #0f0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+/* Übungen */
+#exercise-col h2{ color:var(--crtAmber); text-shadow:0 0 12px var(--crtAmber) }
+#exerciseList li{ border-color:var(--crtAmber); color:var(--crtAmber) }
+.exercise-add{ margin-bottom:8px }
+#newExerciseInput{
+  width:100%; padding:6px 8px; border-radius:8px;
+  border:1px solid var(--crtAmber); background:#000; color:var(--crtAmber);
+  box-shadow:0 0 8px rgba(255,209,90,.25) inset;
 }
 
-button {
-  background: black;
-  color: #0f0;
-  border: 1px solid #0f0;
-  cursor: pointer;
+/* Wochenplan 2 Reihen: oben 3, unten 4 */
+.week{display:flex; flex-direction:column; gap:12px; height:calc(100% - 28px)}
+.week-row{display:grid; gap:12px}
+.week-row.top{ grid-template-columns: repeat(3, 1fr); }
+.week-row.bottom{ grid-template-columns: repeat(4, 1fr); }
+
+/* Tageskacheln */
+.day{
+  border:1px solid var(--crtGreen);
+  border-radius:10px;
+  padding:8px;
+  min-height:180px;
+  background:rgba(255,255,255,0.02);
+  position:relative;
+  box-shadow:0 0 10px rgba(0,255,102,.15) inset;
+}
+.day h3{
+  margin:0 0 6px 0;
+  font-size:14px;
+  color:var(--crtGreen);
+  text-shadow:0 0 10px var(--crtGreen);
 }
 
-ul {
-  list-style: none;
-  padding: 0;
+/* Texteingabe im Tag */
+.day textarea{
+  width:100%;
+  height:calc(100% - 22px);
+  resize:none;
+  border:none; outline:none;
+  background:transparent;
+  color:var(--crtGreen);
+  font:inherit; line-height:1.35;
 }
 
-li {
-  padding: 6px;
-  margin: 4px 0;
-  border: 1px solid #0f0;
-  cursor: pointer;
-}
-
-li:hover {
-  background: #111;
-}
-
-.week-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(2, 1fr);
-  gap: 10px;
-  height: calc(100% - 40px);
-}
-
-.day {
-  border: 1px solid #0f0;
-  padding: 5px;
-}
-
-.day h3 {
-  margin: 0 0 5px;
-  font-size: 14px;
-  color: #0f0;
-}
+/* Drag Ziel Hervorhebung */
+.day.drag-over{ outline:2px dashed var(--crtAmber); }
