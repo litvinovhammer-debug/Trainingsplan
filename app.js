@@ -296,5 +296,10 @@ if (addPlanBtn) {
 }
 
 // ===== Init =====
-renderAll();
+function renderAll() {
+  renderAthletes();
+  renderPlans();   // <--- neu
+  renderWeek();
+  renderExercises();
+}
 
