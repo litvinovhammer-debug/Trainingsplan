@@ -1,119 +1,197 @@
-let athletes = JSON.parse(localStorage.getItem("athletes")) || [];
-let plans = JSON.parse(localStorage.getItem("plans")) || {};
-let exercises = JSON.parse(localStorage.getItem("exercises")) || [];
+// ---------- Daten & Helpers ----------
+const LS = {
+  athletes: "tp_athletes",
+  plans:    "tp_plans",
+  exercises:"tp_exercises",
+};
+
+let athletes  = JSON.parse(localStorage.getItem(LS.athletes))  || ["Emma","Filipp"];
+let plans     = JSON.parse(localStorage.getItem(LS.plans))     || {};
+let exercises = JSON.parse(localStorage.getItem(LS.exercises)) || ["Test","Reißen"];
 
 let selectedAthlete = null;
-let selectedPlan = null;
+let selectedPlanIdx = null; // Index im Array des Athleten
 
-// ---- Athleten ----
-function renderAthletes() {
-  const list = document.getElementById("athleteList");
-  list.innerHTML = "";
-  athletes.forEach((athlete, i) => {
-    const li = document.createElement("li");
-    li.textContent = athlete;
-    li.onclick = () => selectAthlete(athlete);
-    list.appendChild(li);
+function saveAll(){
+  localStorage.setItem(LS.athletes, JSON.stringify(athletes));
+  localStorage.setItem(LS.plans,    JSON.stringify(plans));
+  localStorage.setItem(LS.exercises,JSON.stringify(exercises));
+}
+function ensurePlanArray(name){
+  if(!plans[name]) plans[name] = [];
+}
+
+// ---------- Render Athleten ----------
+function renderAthletes(){
+  const ul = document.getElementById("athleteList");
+  ul.innerHTML = "";
+  athletes.forEach((name, idx) => {
+    const li = document.createElement("li"); li.className = "item";
+    const title = document.createElement("span"); title.className="title"; title.textContent = name;
+    li.onclick = (e)=>{
+      // Klick auf freie Fläche selektiert
+      if(e.target.tagName === "BUTTON") return;
+      selectedAthlete = name; selectedPlanIdx = null;
+      renderAthletes(); renderPlans(); renderWeek();
+    };
+    if(selectedAthlete === name) li.classList.add("active");
+
+    const btns = document.createElement("span"); btns.className="row-btns";
+    const rename = document.createElement("button"); rename.className="mini rename"; rename.textContent="✎";
+    rename.onclick = (ev)=>{
+      ev.stopPropagation();
+      const nn = prompt("Neuer Name:", name);
+      if(!nn) return;
+      // umhängen: Plans mit umbenennen
+      plans[nn] = plans[name] || [];
+      if(selectedAthlete === name) selectedAthlete = nn;
+      delete plans[name];
+      athletes[idx] = nn;
+      saveAll(); renderAthletes(); renderPlans(); renderWeek();
+    };
+    const del = document.createElement("button"); del.className="mini del"; del.textContent="×";
+    del.onclick = (ev)=>{
+      ev.stopPropagation();
+      if(!confirm(`Athlet „${name}“ löschen?`)) return;
+      athletes.splice(idx,1);
+      delete plans[name];
+      if(selectedAthlete===name){ selectedAthlete=null; selectedPlanIdx=null; }
+      saveAll(); renderAthletes(); renderPlans(); renderWeek();
+    };
+    btns.append(rename,del);
+    li.append(title, btns);
+    ul.appendChild(li);
   });
 }
-function addAthlete() {
+function addAthlete(){
   const name = prompt("Name des Athleten?");
-  if (name) {
-    athletes.push(name);
-    localStorage.setItem("athletes", JSON.stringify(athletes));
-    renderAthletes();
-  }
+  if(!name) return;
+  athletes.push(name); ensurePlanArray(name); saveAll();
+  renderAthletes();
 }
-function selectAthlete(name) {
-  selectedAthlete = name;
-  selectedPlan = null;
+
+// ---------- Render Pläne (abh. Athlet) ----------
+function renderPlans(){
+  const ul = document.getElementById("planList");
+  ul.innerHTML = "";
+  if(!selectedAthlete){ return; }
+  ensurePlanArray(selectedAthlete);
+  plans[selectedAthlete].forEach((pl, idx)=>{
+    const li = document.createElement("li"); li.className="item";
+    if(selectedPlanIdx===idx) li.classList.add("active");
+    const title = document.createElement("span"); title.className="title"; title.textContent = pl.name;
+
+    li.onclick = (e)=>{
+      if(e.target.tagName === "BUTTON") return;
+      selectedPlanIdx = idx; renderPlans(); renderWeek();
+    };
+
+    const btns = document.createElement("span"); btns.className="row-btns";
+    const rename = document.createElement("button"); rename.className="mini rename"; rename.textContent="✎";
+    rename.onclick = (ev)=>{
+      ev.stopPropagation();
+      const nn = prompt("Neuer Plan-Name:", pl.name);
+      if(!nn) return;
+      pl.name = nn; saveAll(); renderPlans(); renderWeek();
+    };
+    const del = document.createElement("button"); del.className="mini del"; del.textContent="×";
+    del.onclick = (ev)=>{
+      ev.stopPropagation();
+      if(!confirm(`Plan „${pl.name}“ löschen?`)) return;
+      plans[selectedAthlete].splice(idx,1);
+      if(selectedPlanIdx===idx) selectedPlanIdx=null;
+      saveAll(); renderPlans(); renderWeek();
+    };
+    btns.append(rename,del);
+    li.append(title, btns);
+    ul.appendChild(li);
+  });
+}
+function addPlan(){
+  if(!selectedAthlete){ alert("Bitte zuerst einen Athleten wählen."); return; }
+  const name = prompt("Plan-Name?");
+  if(!name) return;
+  ensurePlanArray(selectedAthlete);
+  plans[selectedAthlete].push({name, days:{}}); saveAll();
   renderPlans();
-  renderWeek();
 }
 
-// ---- Pläne ----
-function renderPlans() {
-  const list = document.getElementById("planList");
-  list.innerHTML = "";
-  if (!selectedAthlete) return;
-  const athletePlans = plans[selectedAthlete] || [];
-  athletePlans.forEach((plan, i) => {
-    const li = document.createElement("li");
-    li.textContent = plan.name;
-    li.onclick = () => {
-      selectedPlan = plan;
-      renderWeek();
-    };
-    list.appendChild(li);
-  });
-}
-function addPlan() {
-  if (!selectedAthlete) {
-    alert("Wähle zuerst einen Athleten!");
-    return;
-  }
-  const name = prompt("Name des Plans?");
-  if (name) {
-    if (!plans[selectedAthlete]) plans[selectedAthlete] = [];
-    plans[selectedAthlete].push({ name, days: {} });
-    localStorage.setItem("plans", JSON.stringify(plans));
-    renderPlans();
-  }
-}
+// ---------- Übungen ----------
+function renderExercises(){
+  const ul = document.getElementById("exerciseList");
+  ul.innerHTML = "";
+  exercises.forEach((ex, idx)=>{
+    const li = document.createElement("li"); li.className="item";
+    const title = document.createElement("span"); title.className="title"; title.textContent = ex;
 
-// ---- Übungen ----
-function renderExercises() {
-  const list = document.getElementById("exerciseList");
-  list.innerHTML = "";
-  exercises.forEach((exercise, i) => {
-    const li = document.createElement("li");
-    li.textContent = exercise;
+    // Drag
     li.draggable = true;
-    li.ondragstart = (e) => e.dataTransfer.setData("text/plain", exercise);
-    list.appendChild(li);
-  });
-}
-function addExercise() {
-  const input = document.getElementById("newExerciseInput");
-  const name = input.value.trim();
-  if (name) {
-    exercises.push(name);
-    localStorage.setItem("exercises", JSON.stringify(exercises));
-    input.value = "";
-    renderExercises();
-  }
-}
+    li.ondragstart = (e)=> e.dataTransfer.setData("text/plain", ex);
 
-// ---- Wochenplan ----
-function renderWeek() {
-  const week = document.getElementById("week");
-  week.innerHTML = "";
-  if (!selectedPlan) return;
-  const days = ["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
-  days.forEach(day => {
-    const div = document.createElement("div");
-    div.className = "day";
-    div.innerHTML = `<h3>${day}</h3>`;
-    div.ondragover = (e) => e.preventDefault();
-    div.ondrop = (e) => {
-      const exercise = e.dataTransfer.getData("text/plain");
-      if (!selectedPlan.days[day]) selectedPlan.days[day] = [];
-      selectedPlan.days[day].push(exercise);
-      localStorage.setItem("plans", JSON.stringify(plans));
-      renderWeek();
+    const btns = document.createElement("span"); btns.className="row-btns";
+    const del = document.createElement("button"); del.className="mini del"; del.textContent="×";
+    del.onclick = ()=>{
+      if(!confirm(`Übung „${ex}“ löschen?`)) return;
+      exercises.splice(idx,1); saveAll(); renderExercises();
     };
-    if (selectedPlan.days[day]) {
-      selectedPlan.days[day].forEach(ex => {
-        const p = document.createElement("p");
-        p.textContent = ex;
-        div.appendChild(p);
-      });
-    }
-    week.appendChild(div);
+    btns.append(del);
+    li.append(title, btns);
+    ul.appendChild(li);
   });
 }
+function addExercise(){
+  const input = document.getElementById("newExerciseInput");
+  const val = input.value.trim();
+  if(!val) return;
+  exercises.push(val); input.value=""; saveAll(); renderExercises();
+}
 
-// ---- Init ----
+// ---------- Wochenplan (2 Reihen, editierbar + Drop) ----------
+const TOP = ["Montag","Dienstag","Mittwoch"];
+const BOTTOM = ["Donnerstag","Freitag","Samstag","Sonntag"];
+
+function renderWeek(){
+  const top = document.getElementById("row-top");
+  const bottom = document.getElementById("row-bottom");
+  top.innerHTML = ""; bottom.innerHTML="";
+
+  const plan = (selectedAthlete && Number.isInteger(selectedPlanIdx))
+    ? plans[selectedAthlete][selectedPlanIdx] : null;
+
+  function makeDay(dayName){
+    const wrap = document.createElement("div"); wrap.className="day";
+    const h = document.createElement("h3"); h.textContent = dayName; wrap.appendChild(h);
+
+    const ta = document.createElement("textarea");
+    const text = plan?.days?.[dayName] || "";
+    ta.value = Array.isArray(text) ? text.join("\n") : text;
+    // Tippen => speichern
+    ta.oninput = ()=>{
+      if(!plan) return;
+      plan.days[dayName] = ta.value;
+      saveAll();
+    };
+    // Drop
+    wrap.ondragover = e=>{ e.preventDefault(); wrap.classList.add("drag-over"); };
+    wrap.ondragleave = ()=> wrap.classList.remove("drag-over");
+    wrap.ondrop = (e)=>{
+      e.preventDefault(); wrap.classList.remove("drag-over");
+      const ex = e.dataTransfer.getData("text/plain");
+      if(!ex) return;
+      ta.value = (ta.value ? ta.value + "\n" : "") + ex;
+      if(plan){ plan.days[dayName] = ta.value; saveAll(); }
+    };
+
+    wrap.appendChild(ta);
+    return wrap;
+  }
+
+  TOP.forEach(d=> top.appendChild(makeDay(d)));
+  BOTTOM.forEach(d=> bottom.appendChild(makeDay(d)));
+}
+
+// ---------- Init ----------
 renderAthletes();
 renderExercises();
+renderPlans();
 renderWeek();
