@@ -1,101 +1,210 @@
-:root {
-  --blue: #00f3ff;
-  --blue-glow: #0ff;
-  --green: #00ff66;
-  --green-glow: #6f6;
-  --amber: #ffcc00;
-  --amber-glow: #ff0;
+/* ===== Farben & CRT Glow ===== */
+:root{
   --bg: #000;
+  --panel: #0b0b0b;
+  --line: #222;
+
+  --blue:  #36d9ff;
+  --blueGlow: 0 0 6px #36d9ff, 0 0 16px #0ff;
+
+  --green: #00ff66;
+  --greenGlow: 0 0 6px #00ff66, 0 0 16px #6f6;
+
+  --amber: #ffcc00;
+  --amberGlow: 0 0 6px #ffcc00, 0 0 16px #ffea00;
 }
 
-body {
-  margin: 0;
-  font-family: monospace;
+* { box-sizing: border-box; }
+html,body { height: 100%; }
+body{
+  margin:0;
   background: var(--bg);
   color: var(--green);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
 }
 
-.app {
+/* CRT feiner Scanline-Effekt (dezent) */
+body::after{
+  content:"";
+  position:fixed; inset:0;
+  pointer-events:none;
+  background: repeating-linear-gradient(
+    to bottom, rgba(255,255,255,0.02), rgba(255,255,255,0.02) 1px,
+                 transparent 1px, transparent 3px
+  );
+  mix-blend-mode: overlay;
+}
+
+/* ===== Grundlayout: 15% | 70% | 15% ===== */
+.app{
+  height: 100dvh;
   display: grid;
-  grid-template-columns: 180px 1fr 200px;
-  height: 100vh;
+  grid-template-columns: minmax(160px, 15%) 1fr minmax(160px, 15%);
+  grid-template-rows: 100%;
 }
 
 /* Spalten */
-.col { display:flex; flex-direction:column; border-right:1px solid #222; }
-.col-right { border-right:none; }
+.col{ display:flex; flex-direction:column; border-right:1px solid var(--line); }
+.col-right{ border-right:none; }
 
-/* Header-Bar */
-.bar {
+/* Balken/Headers */
+.bar{
   display:flex; align-items:center; justify-content:space-between;
-  padding:.4rem .6rem; background:#111;
-  border-bottom:1px solid #333;
+  gap:.5rem;
+  padding:.5rem .7rem;
+  background: #101010;
+  border-bottom:1px solid var(--line);
 }
-.bar h1 { font-size:1rem; margin:0; }
+h1{ margin:0; font-size:1rem; letter-spacing:.04em; }
 
-/* Listen */
-.list { list-style:none; padding:0; margin:0; }
-.list li {
-  display:flex; justify-content:space-between; align-items:center;
-  padding:.3rem .5rem; margin:.2rem; background:#111;
-  border:1px solid #333; border-radius:4px;
-  cursor:pointer;
-}
-.list li.selected { background:#222; }
-.list li span { flex:1; }
+/* Farbige Schrift */
+.crtBlue{  color: var(--blue);  text-shadow: var(--blueGlow); }
+.crtGreen{ color: var(--green); text-shadow: var(--greenGlow); }
+.crtAmber{ color: var(--amber); text-shadow: var(--amberGlow); }
 
 /* Buttons */
-.btn {
-  background:#000; color:var(--amber); border:1px solid var(--amber);
-  cursor:pointer; border-radius:4px;
+.btn{
+  background:#000;
+  border:1px solid var(--amber);
+  color:var(--amber);
+  border-radius:6px;
+  padding:.25rem .5rem;
+  cursor:pointer;
+  box-shadow: 0 0 8px rgba(255,204,0,.15);
 }
-.btn.small { padding:0 .4rem; }
+.btn.small{ padding:.1rem .45rem; }
 
-/* Tabs (Pläne) */
-.tabs { display:flex; flex-wrap:wrap; gap:.3rem; }
-.tab {
-  padding:.3rem .5rem; border:1px solid var(--blue);
-  border-radius:4px; color:var(--blue); cursor:pointer;
+/* Listen (Athleten / Übungen) */
+.list{ list-style:none; margin:0; padding:.5rem; display:flex; flex-direction:column; gap:.45rem; }
+.list li{
+  display:flex; align-items:center; gap:.5rem; justify-content:space-between;
+  background: var(--panel);
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:.4rem .55rem;
+  color: var(--blue); /* Standard: links blau */
+  text-shadow: var(--blueGlow);
 }
-.tab.active {
-  background:#111; color:var(--green); border-color:var(--green);
+.col-right .list li{
+  color: var(--amber); text-shadow: var(--amberGlow); /* rechts gelb */
+}
+.list li.selected{
+  outline: 2px solid var(--blue);
+  box-shadow: 0 0 14px rgba(54,217,255,.25);
+}
+.list li span{ flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+/* Tabs (Pläne) in der Mitte */
+.tabs{ display:flex; flex-wrap:wrap; gap:.4rem; align-items:center; }
+.tab{
+  padding:.32rem .55rem;
+  border:1px solid var(--blue);
+  border-radius:8px;
+  color: var(--blue); text-shadow: var(--blueGlow);
+  background:#000;
+  cursor:pointer;
+}
+.tab.active{
+  border-color: var(--green);
+  color: var(--green); text-shadow: var(--greenGlow);
+  background: #0b0b0b;
 }
 
-/* Wochenplan */
-.week { flex:1; overflow:auto; padding:.5rem; }
-.grid2 { display:flex; gap:.5rem; justify-content:center; margin-bottom:.5rem; }
-.day {
-  flex:1; min-width:200px; border:1px solid #333; border-radius:6px;
-  padding:.4rem; background:#111;
-  display:flex; flex-direction:column;
-}
-.day h3 { margin:0 0 .3rem 0; font-size:.9rem; color:var(--green); }
-.day textarea {
-  flex:1; resize:none; background:#000; color:var(--green);
-  border:1px solid #333; border-radius:4px;
-  padding:.3rem; font-family:inherit;
-}
-.day.dragover { outline:2px dashed var(--amber); }
-
-/* Neue Übung */
-.add-row { display:flex; gap:.3rem; padding:.4rem; }
-.add-row input {
-  flex:1; background:#000; color:var(--amber);
-  border:1px solid var(--amber); border-radius:4px;
-  padding:.3rem;
+/* ===== Wochenplan ===== */
+.week{
+  flex:1;
+  padding:.7rem;
+  overflow:auto;
+  display:flex;
+  flex-direction:column;
+  gap:.8rem;
 }
 
-/* Drag-Ghost */
-.drag-ghost {
-  position: fixed;
-  z-index: 9999;
-  pointer-events: none;
-  background: #111;
-  border: 1px solid #333;
-  border-radius: 6px;
-  padding: .3rem .5rem;
-  color: var(--amber);
-  text-shadow: 0 0 6px var(--amber-glow);
-  box-shadow: 0 0 12px #000;
-  font: inherit;
+/* 3 Boxen oben */
+.topRow{
+  display:grid;
+  grid-template-columns: repeat(3, minmax(260px, 1fr));
+  gap: .9rem;
+}
+
+/* 4 Boxen unten */
+.botRow{
+  display:grid;
+  grid-template-columns: repeat(4, minmax(220px, 1fr));
+  gap: .9rem;
+}
+
+/* Tages-Box */
+.day{
+  background: var(--panel);
+  border:1px solid #2a2a2a;
+  border-radius:12px;
+  padding:.55rem;
+  min-height: 260px;              /* -> Größe der Boxen */
+  display:flex; flex-direction:column; gap:.45rem;
+  box-shadow: inset 0 0 0 1px #000;
+}
+.day h3{
+  margin:0;
+  font-size:.95rem;
+  color: var(--green); text-shadow: var(--greenGlow);
+}
+
+/* Textfelder in den Tagen */
+.day textarea{
+  flex:1;
+  resize:none;
+  background:#000;
+  color: var(--green); text-shadow: var(--greenGlow);
+  border:1px solid #333;
+  border-radius:8px;
+  padding:.5rem;
+  min-height: 180px;              /* -> Platz zum Schreiben */
+  line-height:1.25;
+}
+
+/* Hervorhebung beim Drag-Ziel */
+.day.dragover{
+  outline: 2px dashed var(--amber);
+  box-shadow: 0 0 14px rgba(255,204,0,.25);
+}
+
+/* Eingabezeile für neue Übungen */
+.add-row{
+  display:flex; gap:.4rem; align-items:center;
+  padding:.6rem; border-top:1px solid var(--line);
+}
+.add-row input{
+  flex:1;
+  background:#000;
+  color: var(--amber); text-shadow: var(--amberGlow);
+  border:1px solid var(--amber);
+  border-radius:8px;
+  padding:.4rem .6rem;
+}
+
+/* Drag-Ghost (Pointer-Fallback) */
+.drag-ghost{
+  position:fixed; z-index:9999; pointer-events:none;
+  left:0; top:0;
+  transform:translate(-50%, -50%);
+  background:#111;
+  color:var(--amber); text-shadow:var(--amberGlow);
+  border:1px solid #333; border-radius:8px;
+  padding:.25rem .45rem;
+  box-shadow:0 0 12px #000;
+}
+
+/* ===== Responsive Feintuning ===== */
+@media (max-width: 1100px){
+  .app{ grid-template-columns: 18% 1fr 18%; }
+  .topRow{ grid-template-columns: repeat(3, minmax(220px, 1fr)); }
+  .botRow{ grid-template-columns: repeat(4, minmax(200px, 1fr)); }
+  .day{ min-height: 220px; }
+}
+@media (max-width: 900px){
+  .app{ grid-template-columns: 22% 1fr 22%; }
+  .topRow{ grid-template-columns: repeat(3, 1fr); }
+  .botRow{ grid-template-columns: repeat(4, 1fr); }
+  .day{ min-height: 200px; }
 }
