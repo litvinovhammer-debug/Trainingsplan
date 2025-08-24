@@ -26,17 +26,24 @@
       </div>
     </aside>
 
+    <!-- NEU: 2. Spalte – Pläne des Athleten -->
+    <aside class="col col-plans">
+      <div class="panel panel-plans">
+        <div class="panel-header plans">PLÄNE
+          <button id="addPlanBtn" class="tiny-btn glow-blue" title="Neuen Plan anlegen">＋</button>
+        </div>
+        <div id="planList" class="list"></div>
+      </div>
+    </aside>
+
     <!-- Mitte: Wochenplan -->
     <main class="col col-center">
       <div class="panel panel-mid">
         <div class="panel-header mid">
           <span id="planTitle">WOCHENPLAN</span>
-          <button id="newPlanBtn" class="tiny-btn glow-green" title="Neuer Plan">Neuer&nbsp;Plan</button>
         </div>
 
-        <div id="weekGrid" class="week-grid">
-          <!-- Cards werden von JS befüllt -->
-        </div>
+        <div id="weekGrid" class="week-grid"></div>
       </div>
     </main>
 
@@ -59,7 +66,6 @@
 
   <script src="app.js"></script>
   <script>
-    // Service Worker registrieren (falls noch nicht aktiv)
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./sw.js').catch(()=>{});
     }
