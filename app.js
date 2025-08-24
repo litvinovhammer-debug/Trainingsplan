@@ -1,117 +1,177 @@
-// ----- Persistenter State -----
-const KEY = "trainer-state-v1";
+// ===== Speicher laden =====
+let data = JSON.parse(localStorage.getItem("trainer-data") || "{}");
 
-const emptyDays = () => ({ mo:"", di:"", mi:"", do:"", fr:"", sa:"", so:"" });
-const newPlan = (title="Neuer Plan") => ({ id: crypto.randomUUID(), title, days: emptyDays() });
-const newAthlete = (name="Neuer Athlet") => ({ id: crypto.randomUUID(), name, plans: [newPlan("Neuer Plan")] });
+if (!data.athletes) data.athletes = [];
+if (!data.exercises) data.exercises = ["Reißen"];
+save();
 
-let state = {
-  athletes: [ newAthlete("Emma"), newAthlete("Filipp") ],
-  selectedAthleteId: null,
-  selectedPlanId: null,
-  exercises: ["Reißen"]
-};
-try { const d = JSON.parse(localStorage.getItem(KEY)); if (d?.athletes) state = d; } catch {}
-const save = () => localStorage.setItem(KEY, JSON.stringify(state));
-
-// ----- Helpers -----
-const $ = s => document.querySelector(s);
-const el = (t,p={},...k) => { const n=document.createElement(t); Object.assign(n,p); k.flat().forEach(x=>n.append(x)); return n; };
-const getAthlete = () => state.athletes.find(a=>a.id===state.selectedAthleteId);
-const getPlan = a => a?.plans.find(p=>p.id===state.selectedPlanId);
-
-// Tap vs Long-press
-function press(node,{onTap,onLongPress,ms=600}){let id=null,long=false;
-  node.addEventListener('pointerdown',()=>{long=false; id=setTimeout(()=>{long=true; onLongPress?.();},ms);});
-  const end=()=>{clearTimeout(id); if(!long) onTap?.();};
-  node.addEventListener('pointerup',end); node.addEventListener('pointerleave',()=>clearTimeout(id));
+function save() {
+  localStorage.setItem("trainer-data", JSON.stringify(data));
 }
 
-// ----- Rendering -----
-function render(){ renderAthletes(); renderPlansAndWeek(); renderExercises(); }
+// ===== DOM Referenzen =====
+const athleteList = document.getElementById("athleteList");
+const planTabs = document.getElementById("planTabs");
+const week = document.getElementById("week");
+const exerciseList = document.getElementById("exerciseList");
 
-function renderAthletes(){
-  const ul=$("#athleteList"); ul.innerHTML="";
-  state.athletes.forEach(a=>{
-    const li=el("li");
-    const name=el("span",{textContent:a.name||"Athlet"});
-    const del=el("button",{className:"btn small",textContent:"–",title:"Löschen"});
-    press(li,{
-      onTap:()=>{ state.selectedAthleteId=a.id; state.selectedPlanId=(getPlan(a)?.id ?? a.plans[0]?.id ?? null); save(); render(); },
-      onLongPress:()=>{ const n=prompt("Athletenname ändern",a.name); if(n!=null){ a.name=n.trim(); save(); render(); } }
-    });
-    del.onclick=()=>{ if(!confirm(`„${a.name}“ löschen?`))return;
-      state.athletes=state.athletes.filter(x=>x.id!==a.id);
-      if(state.selectedAthleteId===a.id){state.selectedAthleteId=null; state.selectedPlanId=null;}
-      save(); render();
+// ===== Athleten =====
+function renderAthletes() {
+  athleteList.innerHTML = "";
+  data.athletes.forEach((a, i) => {
+    const li = document.createElement("li");
+    const span = document.createElement("span");
+    span.textContent = a.name;
+    li.appendChild(span);
+
+    // Auswahl
+    li.onclick = () => {
+      data.selectedAthlete = i;
+      data.selectedPlan = 0;
+      save();
+      render();
     };
-    if(state.selectedAthleteId===a.id) li.classList.add("selected");
-    li.append(name,del); ul.append(li);
+
+    // Entfernen
+    const del = document.createElement("button");
+    del.textContent = "–";
+    del.className = "btn small";
+    del.onclick = e => {
+      e.stopPropagation();
+      data.athletes.splice(i,1);
+      save();
+      render();
+    };
+    li.appendChild(del);
+
+    if (i === data.selectedAthlete) li.classList.add("selected");
+    athleteList.appendChild(li);
   });
-  $("#addAthlete").onclick=()=>{ const a=newAthlete(); state.athletes.unshift(a); state.selectedAthleteId=a.id; state.selectedPlanId=a.plans[0].id; save(); render(); };
 }
 
-function renderPlansAndWeek(){
-  const tabs=$("#planTabs"); const week=$("#week"); tabs.innerHTML=""; week.innerHTML="";
-  const a=getAthlete(); if(!a){ week.append(el("p",{textContent:"Athleten wählen…"})); return; }
+document.getElementById("addAthlete").onclick = () => {
+  const name = prompt("Neuer Athlet:");
+  if (!name) return;
+  data.athletes.push({ name, plans: [] });
+  data.selectedAthlete = data.athletes.length-1;
+  data.selectedPlan = 0;
+  save();
+  render();
+};
 
-  a.plans.forEach(p=>{
-    const t=el("div",{className:"tab",textContent:p.title||"Plan"}); if(p.id===state.selectedPlanId) t.classList.add("active");
-    press(t,{
-      onTap:()=>{ state.selectedPlanId=p.id; save(); renderWeek(week,p); setActive(p.id); },
-      onLongPress:()=>{ const n=prompt("Planname ändern",p.title); if(n!=null){ p.title=n.trim(); save(); render(); } }
-    });
-    tabs.append(t);
+// ===== Pläne =====
+function renderPlans() {
+  planTabs.innerHTML = "";
+  const athlete = data.athletes[data.selectedAthlete];
+  if (!athlete) return;
+
+  athlete.plans.forEach((p, i) => {
+    const tab = document.createElement("div");
+    tab.className = "tab" + (i === data.selectedPlan ? " active" : "");
+    tab.textContent = p.title;
+    tab.onclick = () => {
+      data.selectedPlan = i;
+      save();
+      render();
+    };
+    planTabs.appendChild(tab);
   });
-  $("#addPlan").onclick=()=>{ const p=newPlan(); a.plans.unshift(p); state.selectedPlanId=p.id; save(); render(); };
-
-  const cur=getPlan(a) || a.plans[0]; if(cur && !state.selectedPlanId){ state.selectedPlanId=cur.id; save(); }
-  if(cur) renderWeek(week,cur);
-
-  function setActive(id){[...tabs.children].forEach((c,i)=>c.classList.toggle("active", a.plans[i].id===id));}
 }
 
-function renderWeek(container, plan){
-  container.innerHTML="";
-  const daysTop=[["Montag","mo"],["Dienstag","di"],["Mittwoch","mi"]];
-  const daysBot=[["Donnerstag","do"],["Freitag","fr"],["Samstag","sa"],["Sonntag","so"]];
-  const top=el("div",{className:"grid2 topRow topRowWrap"}); const bot=el("div",{className:"grid2 botRow"});
+document.getElementById("addPlan").onclick = () => {
+  const athlete = data.athletes[data.selectedAthlete];
+  if (!athlete) return;
+  const title = prompt("Neuer Plan:");
+  if (!title) return;
+  athlete.plans.push({ title, days:{} });
+  data.selectedPlan = athlete.plans.length-1;
+  save();
+  render();
+};
 
-  const box=([label,key])=>{
-    const wrap=el("div",{className:"day"});
-    const h=el("h3",{textContent:label});
-    const ta=el("textarea",{value:plan.days[key]||""});
-    ta.addEventListener("input",()=>{plan.days[key]=ta.value; save();});
-    ta.addEventListener("dragover",e=>{e.preventDefault(); wrap.classList.add("dragover");});
-    ta.addEventListener("dragleave",()=>wrap.classList.remove("dragover"));
-    ta.addEventListener("drop",e=>{
-      e.preventDefault(); wrap.classList.remove("dragover");
-      const txt=e.dataTransfer.getData("text/plain"); if(!txt) return;
-      ta.value=(ta.value?ta.value+"\n":"")+txt; plan.days[key]=ta.value; save();
-    });
-    wrap.append(h,ta); return wrap;
+// ===== Übungen =====
+function renderExercises() {
+  exerciseList.innerHTML = "";
+  data.exercises.forEach((ex, i) => {
+    const li = document.createElement("li");
+    li.textContent = ex;
+    li.draggable = true;
+
+    li.ondragstart = e => {
+      e.dataTransfer.setData("text/plain", ex);
+    };
+
+    exerciseList.appendChild(li);
+  });
+}
+
+document.getElementById("addExercise").onclick = () => {
+  const val = document.getElementById("newExercise").value.trim();
+  if (!val) return;
+  data.exercises.push(val);
+  document.getElementById("newExercise").value = "";
+  save();
+  renderExercises();
+};
+
+// ===== Wochenplan =====
+const days = ["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
+
+function renderWeek() {
+  week.innerHTML = "";
+  const athlete = data.athletes[data.selectedAthlete];
+  if (!athlete) return;
+  const plan = athlete.plans[data.selectedPlan];
+  if (!plan) return;
+
+  // 2 Zeilen Layout (3+4)
+  const row1 = document.createElement("div");
+  row1.className = "grid2";
+  days.slice(0,3).forEach(d => row1.appendChild(renderDay(d, plan)));
+  week.appendChild(row1);
+
+  const row2 = document.createElement("div");
+  row2.className = "grid2";
+  days.slice(3).forEach(d => row2.appendChild(renderDay(d, plan)));
+  week.appendChild(row2);
+}
+
+function renderDay(day, plan) {
+  const box = document.createElement("div");
+  box.className = "day";
+  box.innerHTML = `<h3>${day}</h3>`;
+  const ta = document.createElement("textarea");
+  ta.value = plan.days[day] || "";
+  ta.oninput = () => {
+    plan.days[day] = ta.value;
+    save();
   };
-  daysTop.forEach(d=>top.append(box(d))); daysBot.forEach(d=>bot.append(box(d)));
-  container.append(top,bot);
-}
 
-function renderExercises(){
-  const ul=$("#exerciseList"); ul.innerHTML="";
-  state.exercises.forEach((name,idx)=>{
-    const li=el("li",{draggable:true});
-    const s=el("span",{textContent:name});
-    const del=el("button",{className:"btn small",textContent:"–",title:"Löschen"});
-    li.addEventListener("dragstart",e=>{ e.dataTransfer.setData("text/plain",name); });
-    press(li,{ onLongPress:()=>{ const n=prompt("Übung umbenennen",name); if(n!=null){ state.exercises[idx]=n.trim(); save(); renderExercises(); } } });
-    del.onclick=()=>{ state.exercises.splice(idx,1); save(); renderExercises(); };
-    li.append(s,del); ul.append(li);
-  });
-  $("#addExercise").onclick=()=>{ const v=$("#newExercise").value.trim(); if(!v) return;
-    state.exercises.unshift(v); $("#newExercise").value=""; save(); renderExercises();
+  // Drag&Drop Ziel
+  box.ondragover = e => {
+    e.preventDefault();
+    box.classList.add("dragover");
   };
+  box.ondragleave = ()=> box.classList.remove("dragover");
+  box.ondrop = e => {
+    e.preventDefault();
+    const ex = e.dataTransfer.getData("text/plain");
+    plan.days[day] = (plan.days[day]||"") + (plan.days[day] ? "\n" : "") + ex;
+    ta.value = plan.days[day];
+    box.classList.remove("dragover");
+    save();
+  };
+
+  box.appendChild(ta);
+  return box;
 }
 
-// Service Worker (für Offline)
-if('serviceWorker' in navigator){ window.addEventListener('load',()=>{ navigator.serviceWorker.register('./sw.js').catch(()=>{}); }); }
+// ===== Render All =====
+function render() {
+  renderAthletes();
+  renderPlans();
+  renderExercises();
+  renderWeek();
+}
 
 render();
