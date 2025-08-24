@@ -233,5 +233,68 @@ function addExerciseFromInput() {
   inp.value = "";
 }
 
+// -- Pläne-Spalte rendern
+function renderPlans() {
+  const wrap = document.getElementById("planList");
+  if (!wrap) return; // falls alte Version ohne Pläne geladen
+  wrap.innerHTML = "";
+
+  const athlete = getSelectedAthlete();
+  if (!athlete) return;
+
+  athlete.plans.forEach((p, i) => {
+    const row = document.createElement("div");
+    row.className = "athlete"; // nutzt das gleiche Styling wie Athleten
+
+    const input = document.createElement("input");
+    input.value = p.title;
+    input.addEventListener("change", () => {
+      p.title = input.value.trim() || "Plan";
+      saveData();
+      renderPlans();
+      renderWeek();
+    });
+
+    const del = document.createElement("button");
+    del.className = "tiny-btn glow-blue";
+    del.textContent = "−";
+    del.title = "Plan löschen";
+    del.addEventListener("click", (e) => {
+      e.stopPropagation();
+      athlete.plans.splice(i, 1);
+      saveData();
+      renderPlans();
+      renderWeek();
+    });
+
+    row.addEventListener("click", () => {
+      // wenn man den Plan anklickt, diesen als aktuellen nehmen
+      data.selectedPlanIndexByAthlete = data.selectedPlanIndexByAthlete || {};
+      data.selectedPlanIndexByAthlete[athlete.id] = i;
+      saveData();
+      renderWeek();
+      renderPlans();
+    });
+
+    row.appendChild(input);
+    row.appendChild(del);
+    wrap.appendChild(row);
+  });
+}
+
+// Button für neuen Plan
+const addPlanBtn = document.getElementById("addPlanBtn");
+if (addPlanBtn) {
+  addPlanBtn.addEventListener("click", () => {
+    const athlete = getSelectedAthlete();
+    if (!athlete) return;
+    athlete.plans.push(emptyPlan("Neuer Plan"));
+    saveData();
+    renderPlans();
+    renderWeek();
+  });
+}
+
 // ===== Init =====
 renderAll();
+
