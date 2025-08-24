@@ -1,4 +1,4 @@
-/* Grundlayout */
+./* Grundlayout */
 html, body {
   height: 100%;
   margin: 0;
@@ -9,7 +9,8 @@ html, body {
 
 #app {
   display: grid;
-  grid-template-columns: 15% 70% 15%;
+  /* Vier Spalten: Athleten (schmal), Pläne (schmal), Mitte (breit ~60%), Übungen (schmal) */
+  grid-template-columns: 14% 16% 56% 14%;
   grid-template-rows: 100vh;
   gap: 12px;
   padding: 12px;
@@ -29,16 +30,15 @@ html, body {
 
 /* Panel-Header */
 .panel-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  display: flex; align-items: center; justify-content: space-between;
   padding: 10px 12px;
   border-bottom: 1px solid #111;
   letter-spacing: .5px;
 }
-.panel-header.left  { color: #69c3ff; text-shadow: 0 0 6px rgba(105,195,255,.8); }
-.panel-header.mid   { color: #7CFF7C; text-shadow: 0 0 6px rgba(124,255,124,.8); }
-.panel-header.right { color: #ffd65a; text-shadow: 0 0 6px rgba(255,214,90,.8); }
+.panel-header.left   { color: #69c3ff; text-shadow: 0 0 6px rgba(105,195,255,.8); }
+.panel-header.plans  { color: #69c3ff; text-shadow: 0 0 6px rgba(105,195,255,.8); }
+.panel-header.mid    { color: #7CFF7C; text-shadow: 0 0 6px rgba(124,255,124,.8); }
+.panel-header.right  { color: #ffd65a; text-shadow: 0 0 6px rgba(255,214,90,.8); }
 
 /* Buttons */
 .tiny-btn {
@@ -64,16 +64,11 @@ html, body {
 .glow-yellow { box-shadow: 0 0 10px rgba(255,214,90,.5); }
 
 /* Listen */
-.list {
-  padding: 10px;
-  overflow: auto;
-  flex: 1 1 auto;
-}
+.list { padding: 10px; overflow: auto; flex: 1 1 auto; }
 
+/* Athleten-Liste */
 .col-left .list .athlete {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  display: flex; align-items: center; gap: 8px;
   border: 1px solid #1b2a33;
   border-radius: 8px;
   padding: 8px 10px;
@@ -84,10 +79,32 @@ html, body {
   cursor: pointer;
 }
 .athlete.active { outline: 2px solid #69c3ff; }
-
 .athlete input {
   background: transparent; border: none; color: inherit; width: 100%;
 }
+
+/* Pläne-Liste */
+.col-plans .list .plan {
+  position: relative;
+  display: flex; align-items: center; gap: 8px;
+  border: 1px solid #1b2a33;
+  border-radius: 8px;
+  padding: 8px 34px 8px 10px; /* Platz für × */
+  margin-bottom: 8px;
+  background: #0b1015;
+  color: #a7dbff;
+  text-shadow: 0 0 6px rgba(105,195,255,.6);
+  cursor: pointer;
+}
+.plan.active { outline: 2px solid #69c3ff; }
+.plan input { background: transparent; border: none; color: inherit; width: 100%; }
+.plan .delete-btn {
+  position: absolute; right: 6px; top: 6px;
+  background: #b91c1c; color: #fff; border: none;
+  border-radius: 6px; width: 22px; height: 22px;
+  line-height: 22px; text-align: center; font-weight: 700; cursor: pointer;
+}
+.plan .delete-btn:hover { background: #991b1b; }
 
 /* Neue Übung Reihe */
 .new-ex-row {
@@ -117,19 +134,14 @@ html, body {
   user-select: none;
 }
 .exercise .delete-btn {
-  position: absolute;
-  right: 6px; top: 6px;
-  background: #b91c1c;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  width: 22px; height: 22px;
-  line-height: 22px; text-align:center;
-  font-weight: bold; cursor: pointer;
+  position: absolute; right: 6px; top: 6px;
+  background: #b91c1c; color: #fff; border: none;
+  border-radius: 6px; width: 22px; height: 22px;
+  line-height: 22px; text-align:center; font-weight: bold; cursor: pointer;
 }
 .exercise .delete-btn:hover { background: #991b1b; }
 
-/* Woche */
+/* Woche – 3 oben, 4 unten */
 .week-grid {
   padding: 12px;
   display: grid;
