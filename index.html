@@ -2,18 +2,21 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Trainingsplan</title>
-  <link rel="stylesheet" href="style.css" />
-  <link rel="manifest" href="manifest.webmanifest" />
+
+  <!-- PWA / Styles -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="app">
+
     <!-- Linke Spalte: Athleten -->
     <aside class="col col-left">
       <header class="bar">
-        <h1>ATHLETEN</h1>
-        <button id="addAthlete" class="btn small">+</button>
+        <h1 class="crtBlue">ATHLETEN</h1>
+        <button id="addAthlete" class="btn small crtAmber">+</button>
       </header>
       <ul id="athleteList" class="list"></ul>
     </aside>
@@ -22,20 +25,32 @@
     <main class="col col-main">
       <header class="bar">
         <div id="planTabs" class="tabs"></div>
-        <button id="addPlan" class="btn small">+</button>
+        <button id="addPlan" class="btn small crtAmber">+</button>
       </header>
-      <section id="week" class="week"></section>
+
+      <!-- Wochenplan (wird von app.js gefüllt) -->
+      <section id="week" class="week">
+        <!-- app.js rendert hier:
+             <div class="topRow"> … 3 x .day … </div>
+             <div class="botRow"> … 4 x .day … </div>
+        -->
+      </section>
     </main>
 
     <!-- Rechte Spalte: Übungen -->
     <aside class="col col-right">
-      <header class="bar"><h1>ÜBUNGEN</h1></header>
+      <header class="bar">
+        <h1 class="crtAmber">ÜBUNGEN</h1>
+      </header>
+
       <ul id="exerciseList" class="list"></ul>
+
       <div class="add-row">
         <input id="newExercise" placeholder="Neue Übung" />
-        <button id="addExercise" class="btn small">+</button>
+        <button id="addExercise" class="btn small crtAmber">+</button>
       </div>
     </aside>
+
   </div>
 
   <script src="app.js"></script>
