@@ -1,28 +1,19 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <title>Trainingsplan</title>
-
-  <!-- PWA / iOS Vollbild -->
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="theme-color" content="#000000">
-
-  <link rel="manifest" href="manifest.webmanifest">
-  <link rel="apple-touch-icon" href="icons/icon-180.png">
-
   <link rel="stylesheet" href="style.css" />
-  <script defer src="app.js"></script>
+  <link rel="manifest" href="manifest.webmanifest" />
 </head>
 <body>
-  <div id="app" class="shell">
+  <div class="app">
     <!-- Linke Spalte: Athleten -->
     <aside class="col col-left">
       <header class="bar">
         <h1>ATHLETEN</h1>
-        <button id="addAthlete" class="btn">+</button>
+        <button id="addAthlete" class="btn small">+</button>
       </header>
       <ul id="athleteList" class="list"></ul>
     </aside>
@@ -30,28 +21,23 @@
     <!-- Mitte: Pläne + Wochenplan -->
     <main class="col col-main">
       <header class="bar">
-        <div class="tabs" id="planTabs"></div>
-        <button id="addPlan" class="btn">+</button>
+        <div id="planTabs" class="tabs"></div>
+        <button id="addPlan" class="btn small">+</button>
       </header>
-
-      <section id="week" class="week">
-        <!-- wird per JS gerendert -->
-      </section>
+      <section id="week" class="week"></section>
     </main>
 
     <!-- Rechte Spalte: Übungen -->
     <aside class="col col-right">
-      <header class="bar">
-        <h1>ÜBUNGEN</h1>
-      </header>
+      <header class="bar"><h1>ÜBUNGEN</h1></header>
       <ul id="exerciseList" class="list"></ul>
-
       <div class="add-row">
         <input id="newExercise" placeholder="Neue Übung" />
         <button id="addExercise" class="btn small">+</button>
       </div>
     </aside>
   </div>
-  <noscript>Diese App benötigt JavaScript.</noscript>
+
+  <script src="app.js"></script>
 </body>
 </html>
