@@ -1,38 +1,63 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Trainingsplan</title>
 
-  <!-- Manifest für PWA -->
+  <!-- Manifest & Icons -->
   <link rel="manifest" href="manifest.webmanifest">
-
-  <!-- Icons -->
   <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
   <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
-
-  <!-- Retro Theme -->
   <meta name="theme-color" content="#00FF00">
 
-  <!-- Stylesheet -->
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="app"></div>
+  <div class="layout">
+    <!-- Linke Spalte: Athleten -->
+    <aside class="sidebar left">
+      <header class="bar">
+        <span class="title">ATHLETEN</span>
+        <button id="addAthlete" class="btn small">+</button>
+      </header>
+      <ul id="athleteList" class="list"></ul>
+    </aside>
 
-  <!-- App Script -->
+    <!-- Mitte: Plan-Tabs + Wochenplan -->
+    <main class="center">
+      <div class="tabs">
+        <div id="planTabs" class="tabbar"></div>
+        <button id="addPlan" class="btn">Neuer Plan</button>
+      </div>
+
+      <section id="week" class="week">
+        <!-- wird von app.js mit Tagen gefüllt -->
+      </section>
+    </main>
+
+    <!-- Rechte Spalte: Übungen -->
+    <aside class="sidebar right">
+      <header class="bar">
+        <span class="title">ÜBUNGEN</span>
+        <button id="addExercise" class="btn small">+</button>
+      </header>
+      <div class="exercise-editor">
+        <input id="newExercise" type="text" placeholder="Neue Übung…" />
+      </div>
+      <ul id="exerciseList" class="list exercises"></ul>
+    </aside>
+  </div>
+
+  <!-- App-Logik -->
   <script src="app.js"></script>
 
-  <!-- Service Worker Registrierung -->
+  <!-- Service Worker -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').then(
-          reg => console.log('Service Worker registriert:', reg),
-          err => console.error('Service Worker Fehler:', err)
-        );
+        navigator.serviceWorker.register('sw.js');
       });
     }
   </script>
