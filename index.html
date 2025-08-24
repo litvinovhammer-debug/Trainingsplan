@@ -1,43 +1,51 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Trainingsplan</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="style.css" />
+  <link rel="manifest" href="manifest.webmanifest" />
 </head>
 <body>
   <div class="container">
-    
-    <!-- Athleten -->
-    <div class="column" id="athlete-column">
-      <h2>ATHLETEN <button onclick="addAthlete()">+</button></h2>
-      <ul id="athleteList"></ul>
-    </div>
 
-    <!-- Pläne -->
-    <div class="column" id="plan-column">
-      <h2>PLÄNE <button onclick="addPlan()">+</button></h2>
+    <!-- Athleten -->
+    <section class="column slim" id="athlete-col">
+      <h2>ATHLETEN <button class="mini" onclick="addAthlete()">+</button></h2>
+      <ul id="athleteList"></ul>
+    </section>
+
+    <!-- Pläne (abhängig vom Athleten) -->
+    <section class="column slim" id="plan-col">
+      <h2>PLÄNE <button class="mini" onclick="addPlan()">+</button></h2>
       <ul id="planList"></ul>
-    </div>
+    </section>
 
     <!-- Wochenplan -->
-    <div class="column large" id="week-column">
+    <section class="column large" id="week-col">
       <h2>WOCHENPLAN</h2>
-      <div id="week" class="week-grid"></div>
-    </div>
+
+      <div id="week" class="week">
+        <div class="week-row top" id="row-top"></div>
+        <div class="week-row bottom" id="row-bottom"></div>
+      </div>
+    </section>
 
     <!-- Übungen -->
-    <div class="column" id="exercise-column">
-      <h2>ÜBUNGEN <button onclick="addExercise()">+</button></h2>
-      <input id="newExerciseInput" placeholder="Neue Übung..." 
-             onkeydown="if(event.key==='Enter') addExercise()">
+    <section class="column" id="exercise-col">
+      <h2>ÜBUNGEN 
+        <button class="mini" onclick="addExercise()">+</button>
+      </h2>
+      <div class="exercise-add">
+        <input id="newExerciseInput" placeholder="Neue Übung…"
+               onkeydown="if(event.key==='Enter'){ addExercise(); }" />
+      </div>
       <ul id="exerciseList"></ul>
-    </div>
+    </section>
 
   </div>
 
   <script src="app.js"></script>
 </body>
-</html>.
+</html>
