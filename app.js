@@ -1,236 +1,237 @@
-.// ===== Persistenz =====
-const LS_KEY = "trainer-data-v1";
-let data = (() => {
-  try { return JSON.parse(localStorage.getItem(LS_KEY) || "{}"); }
-  catch { return {}; }
-})();
-if (!data.athletes) data.athletes = [{ name: "Emma", plans: [] }, { name: "Filipp", plans: [] }];
-if (!data.exercises) data.exercises = ["Test", "Reißen"];
-if (data.selectedAthlete == null) data.selectedAthlete = 0;
-if (data.selectedPlan == null) data.selectedPlan = 0;
-function save() { localStorage.setItem(LS_KEY, JSON.stringify(data)); }
+// ===== Model & Persistenz =====
+const DAYS = ["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
+const STORE_KEY = "trainer-data-v1";
 
-// ===== DOM =====
-const $athleteList  = document.getElementById("athleteList");
-const $planTabs     = document.getElementById("planTabs");
-const $week         = document.getElementById("week");
-const $exerciseList = document.getElementById("exerciseList");
-const $addAthlete   = document.getElementById("addAthlete");
-const $addPlan      = document.getElementById("addPlan");
-const $addExercise  = document.getElementById("addExercise");
-const $newExercise  = document.getElementById("newExercise");
+let data = loadData() || seedData();
+let selectedAthleteId = data.athletes.length ? data.athletes[0].id : null;
+
+function seedData() {
+  return {
+    athletes: [
+      { id: uuid(), name: "Emma",    plans: [emptyPlan("Plan 1")] },
+      { id: uuid(), name: "Filipp",  plans: [emptyPlan("Plan 1")] }
+    ],
+    exercises: ["Test", "Reißen"]
+  };
+}
+function emptyPlan(title = "Neuer Plan") {
+  const days = {};
+  DAYS.forEach(d => days[d] = "");
+  return { id: uuid(), title, days };
+}
+function uuid() { return Math.random().toString(36).slice(2) + Date.now().toString(36); }
+
+function saveData() {
+  localStorage.setItem(STORE_KEY, JSON.stringify(data));
+}
+function loadData() {
+  try { return JSON.parse(localStorage.getItem(STORE_KEY) || ""); }
+  catch { return null; }
+}
 
 // ===== Helpers =====
-const DAYS = ["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
-const getAthlete = () => data.athletes[data.selectedAthlete];
-const getPlan    = () => (getAthlete() || {}).plans?.[data.selectedPlan];
+function getSelectedAthlete() {
+  return data.athletes.find(a => a.id === selectedAthleteId) || null;
+}
+function getCurrentPlan(athlete) {
+  // aktuell: immer Plan 0 (du kannst später Plan-Auswahl ergänzen)
+  if (!athlete) return null;
+  return athlete.plans[0] || null;
+}
 
-function render() {
+// ===== Rendering =====
+function renderAll() {
   renderAthletes();
-  renderPlans();
   renderWeek();
   renderExercises();
 }
 
+// -- Athleten links
 function renderAthletes() {
-  $athleteList.innerHTML = "";
-  data.athletes.forEach((a, i) => {
-    const li = document.createElement("li");
-    const name = document.createElement("span");
-    name.textContent = a.name;
-    li.appendChild(name);
+  const wrap = document.getElementById("athleteList");
+  wrap.innerHTML = "";
 
-    // auswählen
-    li.addEventListener("click", () => {
-      data.selectedAthlete = i;
-      data.selectedPlan = 0;
-      save(); render();
+  data.athletes.forEach(a => {
+    const row = document.createElement("div");
+    row.className = "athlete" + (a.id === selectedAthleteId ? " active" : "");
+    row.addEventListener("click", () => {
+      selectedAthleteId = a.id;
+      saveData();
+      renderAll();
     });
 
-    // löschen
+    // kurzer/long press: Name editieren
+    const input = document.createElement("input");
+    input.value = a.name;
+    input.addEventListener("change", () => {
+      a.name = input.value.trim() || "Athlet";
+      saveData();
+      renderAthletes();
+    });
+
+    // Entfernen-Button (optional)
     const del = document.createElement("button");
-    del.className = "btn small crtAmber";
-    del.textContent = "–";
+    del.className = "tiny-btn glow-blue";
+    del.textContent = "−";
+    del.title = "Athlet löschen";
     del.addEventListener("click", (e) => {
       e.stopPropagation();
-      data.athletes.splice(i,1);
-      if (data.selectedAthlete >= data.athletes.length) data.selectedAthlete = data.athletes.length-1;
-      save(); render();
+      const idx = data.athletes.findIndex(x => x.id === a.id);
+      if (idx >= 0) {
+        data.athletes.splice(idx, 1);
+        if (data.athletes.length) selectedAthleteId = data.athletes[0].id;
+        else selectedAthleteId = null;
+        saveData();
+        renderAll();
+      }
     });
-    li.appendChild(del);
 
-    if (i === data.selectedAthlete) li.classList.add("selected");
-    $athleteList.appendChild(li);
+    row.appendChild(input);
+    row.appendChild(del);
+    wrap.appendChild(row);
   });
 }
 
-$addAthlete.addEventListener("click", () => {
-  const name = prompt("Neuer Athlet:");
-  if (!name) return;
-  data.athletes.push({ name, plans: [] });
-  data.selectedAthlete = data.athletes.length - 1;
-  data.selectedPlan = 0;
-  save(); render();
-});
-
-function renderPlans() {
-  $planTabs.innerHTML = "";
-  const a = getAthlete(); if (!a) return;
-  a.plans.forEach((p, i) => {
-    const tab = document.createElement("div");
-    tab.className = "tab" + (i === data.selectedPlan ? " active" : "");
-    tab.textContent = p.title;
-    tab.addEventListener("click", () => {
-      data.selectedPlan = i; save(); render();
-    });
-    $planTabs.appendChild(tab);
-  });
-}
-
-$addPlan.addEventListener("click", () => {
-  const a = getAthlete(); if (!a) return;
-  const title = prompt("Neuer Plan:");
-  if (!title) return;
-  a.plans.push({ title, days: {} });
-  data.selectedPlan = a.plans.length - 1;
-  save(); render();
-});
-
+// -- Wochenplan Mitte
 function renderWeek() {
-  $week.innerHTML = "";
-  const p = getPlan(); if (!p) return;
+  const grid = document.getElementById("weekGrid");
+  grid.innerHTML = "";
 
-  const top = document.createElement("div");
-  top.className = "topRow";
-  DAYS.slice(0,3).forEach(d => top.appendChild(makeDayBox(d, p)));
-  $week.appendChild(top);
+  const athlete = getSelectedAthlete();
+  const plan = getCurrentPlan(athlete);
 
-  const bottom = document.createElement("div");
-  bottom.className = "botRow";
-  DAYS.slice(3).forEach(d => bottom.appendChild(makeDayBox(d, p)));
-  $week.appendChild(bottom);
-}
+  const title = document.getElementById("planTitle");
+  title.textContent = plan ? plan.title : "WOCHENPLAN";
 
-function makeDayBox(day, plan) {
-  const box = document.createElement("div");
-  box.className = "day";
-  box.dataset.day = day;
+  DAYS.forEach(day => {
+    const card = document.createElement("div");
+    card.className = "day-card";
 
-  const h = document.createElement("h3");
-  h.className = "crtGreen";
-  h.textContent = day;
+    const head = document.createElement("div");
+    head.className = "day-head";
+    head.textContent = day;
 
-  const ta = document.createElement("textarea");
-  ta.value = plan.days[day] || "";
-  ta.addEventListener("input", () => {
-    plan.days[day] = ta.value; save();
+    const body = document.createElement("div");
+    body.className = "day-body";
+
+    const ta = document.createElement("textarea");
+    ta.className = "day-text";
+    ta.placeholder = "Hierhin Übungen ziehen oder tippen…";
+    ta.value = plan ? (plan.days[day] || "") : "";
+    ta.addEventListener("input", () => {
+      if (plan) {
+        plan.days[day] = ta.value;
+        saveData();
+      }
+    });
+
+    // Drop-Targets
+    ta.addEventListener("dragover", (e) => { e.preventDefault(); ta.classList.add("drag-over"); });
+    ta.addEventListener("dragleave", () => ta.classList.remove("drag-over"));
+    ta.addEventListener("drop", (e) => {
+      e.preventDefault();
+      ta.classList.remove("drag-over");
+      const txt = e.dataTransfer.getData("text/plain");
+      if (txt) {
+        ta.value = (ta.value ? ta.value + "\n" : "") + txt;
+        ta.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+    });
+
+    body.appendChild(ta);
+    card.appendChild(head);
+    card.appendChild(body);
+    grid.appendChild(card);
   });
-
-  // Dragover erlauben (für Maus/klassisches DnD)
-  box.addEventListener("dragover", e => e.preventDefault());
-
-  box.appendChild(h);
-  box.appendChild(ta);
-  return box;
 }
 
-// ===== Übungen + Pointer-Drag Fallback =====
-
+// -- Übungen rechts (mit Löschen & Touch-Fallback)
 function renderExercises() {
   const list = document.getElementById("exerciseList");
   list.innerHTML = "";
-  exercises.forEach((exercise, i) => {
+
+  data.exercises.forEach((name, i) => {
     const div = document.createElement("div");
     div.className = "exercise";
     div.draggable = true;
-    div.textContent = exercise;
-    div.dataset.index = i;
 
-    // --- Löschen-Button hinzufügen ---
-    const delBtn = document.createElement("button");
-    delBtn.textContent = "×";
-    delBtn.className = "delete-btn";
-    delBtn.onclick = () => {
-      exercises.splice(i, 1);   // Übung löschen
+    const label = document.createElement("span");
+    label.textContent = name;
+
+    const del = document.createElement("button");
+    del.className = "delete-btn";
+    del.title = "Übung löschen";
+    del.textContent = "×";
+    del.addEventListener("click", (e) => {
+      e.stopPropagation();
+      data.exercises.splice(i, 1);
       saveData();
       renderExercises();
-    };
-
-    div.appendChild(delBtn);
-    list.appendChild(div);
-
-    // Drag Events
-    div.addEventListener("dragstart", e => {
-      e.dataTransfer.setData("text/plain", exercise);
     });
-  });
-}
 
-document.getElementById("addExercise").addEventListener("click", () => {
-  const v = $newExercise.value.trim();
-  if (!v) return;
-  data.exercises.push(v);
-  $newExercise.value = "";
-  save(); renderExercises();
-});
-$newExercise.addEventListener("keydown", e => {
-  if (e.key === "Enter") document.getElementById("addExercise").click();
-});
-
-// ---- Pointer-Drag (funktioniert in PWA/Safari auf iPad) ----
-function enablePointerDrag(el, label) {
-  el.addEventListener("pointerdown", (e) => {
-    e.preventDefault();
-
-    // Ghost erzeugen
-    const ghost = document.createElement("div");
-    ghost.className = "drag-ghost";
-    ghost.textContent = label;
-    document.body.appendChild(ghost);
-
-    const moveTo = (x,y) => { ghost.style.left = x+"px"; ghost.style.top = y+"px"; };
-
-    const onMove = (ev) => {
-      moveTo(ev.pageX, ev.pageY);
-      highlightDrop(ev.clientX, ev.clientY);
-    };
-
-    const onUp = (ev) => {
-      document.removeEventListener("pointermove", onMove);
-      document.removeEventListener("pointerup", onUp);
-      ghost.remove();
-      const target = findDayAt(ev.clientX, ev.clientY);
-      const plan = getPlan();
-      if (target && plan) {
-        const day = target.dataset.day;
-        const old = plan.days[day] || "";
-        const text = old ? old + "\n" + label : label;
-        plan.days[day] = text;
-        const ta = target.querySelector("textarea");
-        if (ta) ta.value = text;
-        save();
+    // Drag (Maus/Trackpad)
+    div.addEventListener("dragstart", (e) => {
+      e.dataTransfer.setData("text/plain", name);
+      // kleines transparentes Ghost, damit iPad den Drag akzeptiert
+      if (e.dataTransfer.setDragImage) {
+        const ghost = document.createElement("canvas");
+        ghost.width = 1; ghost.height = 1;
+        e.dataTransfer.setDragImage(ghost, 0, 0);
       }
-      clearHighlight();
-    };
+    });
 
-    moveTo(e.pageX, e.pageY);
-    document.addEventListener("pointermove", onMove, { passive:false });
-    document.addEventListener("pointerup", onUp, { passive:false, once:true });
+    // Touch-Fallback: Tippen fügt in das fokussierte Textfeld ein
+    div.addEventListener("touchend", () => {
+      const active = document.activeElement;
+      if (active && active.classList && active.classList.contains("day-text")) {
+        active.value = (active.value ? active.value + "\n" : "") + name;
+        active.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+    }, { passive: true });
+
+    div.appendChild(label);
+    div.appendChild(del);
+    list.appendChild(div);
   });
 }
 
-function findDayAt(cx, cy) {
-  const el = document.elementFromPoint(cx, cy);
-  return el ? el.closest?.(".day") : null;
-}
-function highlightDrop(cx, cy) {
-  clearHighlight();
-  const d = findDayAt(cx, cy);
-  if (d) d.classList.add("dragover");
-}
-function clearHighlight() {
-  document.querySelectorAll(".day.dragover").forEach(n => n.classList.remove("dragover"));
+// ===== Logik: Neues anlegen =====
+document.getElementById("addAthleteBtn").addEventListener("click", () => {
+  const a = { id: uuid(), name: "Neuer Athlet", plans: [emptyPlan("Plan 1")] };
+  data.athletes.push(a);
+  selectedAthleteId = a.id;
+  saveData();
+  renderAll();
+});
+
+document.getElementById("newPlanBtn").addEventListener("click", () => {
+  const athlete = getSelectedAthlete();
+  if (!athlete) return;
+  athlete.plans.unshift(emptyPlan("Neuer Plan"));
+  saveData();
+  renderAll();
+});
+
+document.getElementById("addExerciseBtn").addEventListener("click", () => {
+  document.getElementById("newExerciseInput").focus();
+});
+
+document.getElementById("commitExerciseBtn").addEventListener("click", addExerciseFromInput);
+document.getElementById("newExerciseInput").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") { e.preventDefault(); addExerciseFromInput(); }
+});
+
+function addExerciseFromInput() {
+  const inp = document.getElementById("newExerciseInput");
+  const name = (inp.value || "").trim();
+  if (!name) return;
+  if (!data.exercises.includes(name)) {
+    data.exercises.push(name);
+    saveData();
+    renderExercises();
+  }
+  inp.value = "";
 }
 
-// ===== Start =====
-render();
+// ===== Init =====
+renderAll();
