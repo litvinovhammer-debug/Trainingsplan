@@ -12,54 +12,61 @@
   <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
   <meta name="theme-color" content="#00FF00">
 
-  <link rel="stylesheet" href="style.css" />
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Trainingsplan</title>
+
+  <!-- PWA / Styles -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="layout">
+  <div class="app">
+
     <!-- Linke Spalte: Athleten -->
-    <aside class="sidebar left">
+    <aside class="col col-left">
       <header class="bar">
-        <span class="title">ATHLETEN</span>
-        <button id="addAthlete" class="btn small">+</button>
+        <h1 class="crtBlue">ATHLETEN</h1>
+        <button id="addAthlete" class="btn small crtAmber">+</button>
       </header>
       <ul id="athleteList" class="list"></ul>
     </aside>
 
-    <!-- Mitte: Plan-Tabs + Wochenplan -->
-    <main class="center">
-      <div class="tabs">
-        <div id="planTabs" class="tabbar"></div>
-        <button id="addPlan" class="btn">Neuer Plan</button>
-      </div>
+    <!-- Mitte: Pläne + Wochenplan -->
+    <main class="col col-main">
+      <header class="bar">
+        <div id="planTabs" class="tabs"></div>
+        <button id="addPlan" class="btn small crtAmber">+</button>
+      </header>
 
+      <!-- Wochenplan (wird von app.js gefüllt) -->
       <section id="week" class="week">
-        <!-- wird von app.js mit Tagen gefüllt -->
+        <!-- app.js rendert hier:
+             <div class="topRow"> … 3 x .day … </div>
+             <div class="botRow"> … 4 x .day … </div>
+        -->
       </section>
     </main>
 
     <!-- Rechte Spalte: Übungen -->
-    <aside class="sidebar right">
+    <aside class="col col-right">
       <header class="bar">
-        <span class="title">ÜBUNGEN</span>
-        <button id="addExercise" class="btn small">+</button>
+        <h1 class="crtAmber">ÜBUNGEN</h1>
       </header>
-      <div class="exercise-editor">
-        <input id="newExercise" type="text" placeholder="Neue Übung…" />
+
+      <ul id="exerciseList" class="list"></ul>
+
+      <div class="add-row">
+        <input id="newExercise" placeholder="Neue Übung" />
+        <button id="addExercise" class="btn small crtAmber">+</button>
       </div>
-      <ul id="exerciseList" class="list exercises"></ul>
     </aside>
+
   </div>
 
-  <!-- App-Logik -->
   <script src="app.js"></script>
-
-  <!-- Service Worker -->
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js');
-      });
-    }
-  </script>
 </body>
 </html>
