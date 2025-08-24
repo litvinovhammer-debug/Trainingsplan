@@ -1,5 +1,5 @@
 // Service Worker für Offline / Cache
-const CACHE = 'trainer-pwa-v2';   // <— Versionsnummer hochsetzen bei Updates
+const CACHE = 'trainer-pwa-v5';   // <— Version anheben bei jedem Update!
 const FILES = [
   './',
   './index.html',
