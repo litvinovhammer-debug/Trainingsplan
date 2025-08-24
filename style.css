@@ -1,227 +1,172 @@
-#/* ===== Farben & CRT Glow ===== */
-:root{
-  --bg: #000;
-  --panel: #0b0b0b;
-  --line: #222;
-
-  --blue:  #36d9ff;
-  --blueGlow: 0 0 6px #36d9ff, 0 0 16px #0ff;
-
-  --green: #00ff66;
-  --greenGlow: 0 0 6px #00ff66, 0 0 16px #6f6;
-
-  --amber: #ffcc00;
-  --amberGlow: 0 0 6px #ffcc00, 0 0 16px #ffea00;
-}
-
-* { box-sizing: border-box; }
-html,body { height: 100%; }
-body{
-  margin:0;
-  background: var(--bg);
-  color: var(--green);
+/* Grundlayout */
+html, body {
+  height: 100%;
+  margin: 0;
+  background: #000;
+  color: #d0f0ff;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
 }
 
-/* CRT feiner Scanline-Effekt (dezent) */
-body::after{
-  content:"";
-  position:fixed; inset:0;
-  pointer-events:none;
-  background: repeating-linear-gradient(
-    to bottom, rgba(255,255,255,0.02), rgba(255,255,255,0.02) 1px,
-                 transparent 1px, transparent 3px
-  );
-  mix-blend-mode: overlay;
-}
-
-/* ===== Grundlayout: 15% | 70% | 15% ===== */
-.app{
-  height: 100dvh;
+#app {
   display: grid;
-  grid-template-columns: minmax(160px, 15%) 1fr minmax(160px, 15%);
-  grid-template-rows: 100%;
+  grid-template-columns: 15% 70% 15%;
+  grid-template-rows: 100vh;
+  gap: 12px;
+  padding: 12px;
+  box-sizing: border-box;
 }
 
 /* Spalten */
-.col{ display:flex; flex-direction:column; border-right:1px solid var(--line); }
-.col-right{ border-right:none; }
-
-/* Balken/Headers */
-.bar{
-  display:flex; align-items:center; justify-content:space-between;
-  gap:.5rem;
-  padding:.5rem .7rem;
-  background: #101010;
-  border-bottom:1px solid var(--line);
+.col { height: 100%; overflow: hidden; }
+.panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #0a0a0a;
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 2px #151515;
 }
-h1{ margin:0; font-size:1rem; letter-spacing:.04em; }
 
-/* Farbige Schrift */
-.crtBlue{  color: var(--blue);  text-shadow: var(--blueGlow); }
-.crtGreen{ color: var(--green); text-shadow: var(--greenGlow); }
-.crtAmber{ color: var(--amber); text-shadow: var(--amberGlow); }
+/* Panel-Header */
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-bottom: 1px solid #111;
+  letter-spacing: .5px;
+}
+.panel-header.left  { color: #69c3ff; text-shadow: 0 0 6px rgba(105,195,255,.8); }
+.panel-header.mid   { color: #7CFF7C; text-shadow: 0 0 6px rgba(124,255,124,.8); }
+.panel-header.right { color: #ffd65a; text-shadow: 0 0 6px rgba(255,214,90,.8); }
 
 /* Buttons */
-.btn{
-  background:#000;
-  border:1px solid var(--amber);
-  color:var(--amber);
-  border-radius:6px;
-  padding:.25rem .5rem;
-  cursor:pointer;
-  box-shadow: 0 0 8px rgba(255,204,0,.15);
-}
-.btn.small{ padding:.1rem .45rem; }
-
-/* Listen (Athleten / Übungen) */
-.list{ list-style:none; margin:0; padding:.5rem; display:flex; flex-direction:column; gap:.45rem; }
-.list li{
-  display:flex; align-items:center; gap:.5rem; justify-content:space-between;
-  background: var(--panel);
-  border:1px solid var(--line);
-  border-radius:8px;
-  padding:.4rem .55rem;
-  color: var(--blue); /* Standard: links blau */
-  text-shadow: var(--blueGlow);
-}
-.col-right .list li{
-  color: var(--amber); text-shadow: var(--amberGlow); /* rechts gelb */
-}
-.list li.selected{
-  outline: 2px solid var(--blue);
-  box-shadow: 0 0 14px rgba(54,217,255,.25);
-}
-.list li span{ flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-
-/* Tabs (Pläne) in der Mitte */
-.tabs{ display:flex; flex-wrap:wrap; gap:.4rem; align-items:center; }
-.tab{
-  padding:.32rem .55rem;
-  border:1px solid var(--blue);
-  border-radius:8px;
-  color: var(--blue); text-shadow: var(--blueGlow);
-  background:#000;
-  cursor:pointer;
-}
-.tab.active{
-  border-color: var(--green);
-  color: var(--green); text-shadow: var(--greenGlow);
-  background: #0b0b0b;
-}
-
-/* ===== Wochenplan ===== */
-.week{
-  flex:1;
-  padding:.7rem;
-  overflow:auto;
-  display:flex;
-  flex-direction:column;
-  gap:.8rem;
-}
-
-/* 3 Boxen oben */
-.topRow{
-  display:grid;
-  grid-template-columns: repeat(3, minmax(260px, 1fr));
-  gap: .9rem;
-}
-
-/* 4 Boxen unten */
-.botRow{
-  display:grid;
-  grid-template-columns: repeat(4, minmax(220px, 1fr));
-  gap: .9rem;
-}
-
-/* Tages-Box */
-.day{
-  background: var(--panel);
-  border:1px solid #2a2a2a;
-  border-radius:12px;
-  padding:.55rem;
-  min-height: 260px;              /* -> Größe der Boxen */
-  display:flex; flex-direction:column; gap:.45rem;
-  box-shadow: inset 0 0 0 1px #000;
-}
-.day h3{
-  margin:0;
-  font-size:.95rem;
-  color: var(--green); text-shadow: var(--greenGlow);
-}
-
-/* Textfelder in den Tagen */
-.day textarea{
-  flex:1;
-  resize:none;
-  background:#000;
-  color: var(--green); text-shadow: var(--greenGlow);
-  border:1px solid #333;
-  border-radius:8px;
-  padding:.5rem;
-  min-height: 180px;              /* -> Platz zum Schreiben */
-  line-height:1.25;
-}
-
-/* Hervorhebung beim Drag-Ziel */
-.day.dragover{
-  outline: 2px dashed var(--amber);
-  box-shadow: 0 0 14px rgba(255,204,0,.25);
-}
-
-/* Eingabezeile für neue Übungen */
-.add-row{
-  display:flex; gap:.4rem; align-items:center;
-  padding:.6rem; border-top:1px solid var(--line);
-}
-.add-row input{
-  flex:1;
-  background:#000;
-  color: var(--amber); text-shadow: var(--amberGlow);
-  border:1px solid var(--amber);
-  border-radius:8px;
-  padding:.4rem .6rem;
-}
-
-/* Drag-Ghost (Pointer-Fallback) */
-.drag-ghost{
-  position:fixed; z-index:9999; pointer-events:none;
-  left:0; top:0;
-  transform:translate(-50%, -50%);
-  background:#111;
-  color:var(--amber); text-shadow:var(--amberGlow);
-  border:1px solid #333; border-radius:8px;
-  padding:.25rem .45rem;
-  box-shadow:0 0 12px #000;
-}
-
-/* ===== Responsive Feintuning ===== */
-@media (max-width: 1100px){
-  .app{ grid-template-columns: 18% 1fr 18%; }
-  .topRow{ grid-template-columns: repeat(3, minmax(220px, 1fr)); }
-  .botRow{ grid-template-columns: repeat(4, minmax(200px, 1fr)); }
-  .day{ min-height: 220px; }
-}
-@media (max-width: 900px){
-  .app{ grid-template-columns: 22% 1fr 22%; }
-  .topRow{ grid-template-columns: repeat(3, 1fr); }
-  .botRow{ grid-template-columns: repeat(4, 1fr); }
-  .day{ min-height: 200px; }
-}
-
-
-/* --- Delete Button Style --- */
-.delete-btn {
-  margin-left: 8px;
-  background: red;
-  color: white;
-  border: none;
-  border-radius: 4px;
+.tiny-btn {
+  font-size: 14px;
+  background: transparent;
+  color: #fff;
+  border: 1px solid #333;
+  border-radius: 6px;
+  padding: 2px 8px;
   cursor: pointer;
-  font-weight: bold;
-  padding: 2px 6px;
+}
+.btn {
+  font-size: 14px;
+  background: #181818;
+  border: 1px solid #333;
+  color: #fff;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+.glow-blue   { box-shadow: 0 0 10px rgba(105,195,255,.5); }
+.glow-green  { box-shadow: 0 0 10px rgba(124,255,124,.5); }
+.glow-yellow { box-shadow: 0 0 10px rgba(255,214,90,.5); }
+
+/* Listen */
+.list {
+  padding: 10px;
+  overflow: auto;
+  flex: 1 1 auto;
 }
 
-.delete-btn:hover {
-  background: darkred;
+.col-left .list .athlete {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #1b2a33;
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  background: #0c1116;
+  color: #a7dbff;
+  text-shadow: 0 0 6px rgba(105,195,255,.6);
+  cursor: pointer;
 }
+.athlete.active { outline: 2px solid #69c3ff; }
+
+.athlete input {
+  background: transparent; border: none; color: inherit; width: 100%;
+}
+
+/* Neue Übung Reihe */
+.new-ex-row {
+  padding: 10px; display: flex; gap: 8px; border-bottom: 1px solid #111;
+}
+#newExerciseInput {
+  flex: 1 1 auto;
+  background: #0f0f0f;
+  color: #ffd65a;
+  border: 1px solid #3a2f04;
+  border-radius: 6px;
+  padding: 6px 8px;
+  outline: none;
+  text-shadow: 0 0 6px rgba(255,214,90,.6);
+}
+
+/* Übungen rechts */
+.exercise {
+  position: relative;
+  border: 1px solid #3a2f04;
+  background: #131007;
+  color: #ffe07a;
+  border-radius: 8px;
+  padding: 8px 34px 8px 10px; /* Platz für × */
+  margin-bottom: 8px;
+  text-shadow: 0 0 6px rgba(255,214,90,.6);
+  user-select: none;
+}
+.exercise .delete-btn {
+  position: absolute;
+  right: 6px; top: 6px;
+  background: #b91c1c;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  width: 22px; height: 22px;
+  line-height: 22px; text-align:center;
+  font-weight: bold; cursor: pointer;
+}
+.exercise .delete-btn:hover { background: #991b1b; }
+
+/* Woche */
+.week-grid {
+  padding: 12px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: minmax(210px, 1fr);
+  gap: 14px;
+  overflow: auto;
+}
+.day-card {
+  display: flex; flex-direction: column;
+  background: #0a0a0a;
+  border: 1px solid #103b10;
+  border-radius: 12px;
+  box-shadow: inset 0 0 0 2px #0c230c;
+}
+.day-head {
+  padding: 8px 10px;
+  color: #7CFF7C;
+  text-shadow: 0 0 6px rgba(124,255,124,.7);
+  border-bottom: 1px solid #0f2c0f;
+}
+.day-body { flex: 1 1 auto; padding: 8px; }
+.day-text {
+  width: 100%; height: 100%;
+  resize: none; outline: none;
+  background: #060a06;
+  color: #a0ffa0;
+  text-shadow: 0 0 6px rgba(124,255,124,.55);
+  border: 1px solid #103b10; border-radius: 8px;
+  padding: 8px;
+}
+
+/* Drag-Hilfen */
+.day-text.drag-over { box-shadow: 0 0 0 2px #7cff7c; }
+.exercise.drag-ghost { opacity: .6; }
+
+/* Scrollbar subtil */
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-thumb { background: #1a1a1a; border-radius: 8px; }
+*::-webkit-scrollbar-track { background: #0a0a0a; }
