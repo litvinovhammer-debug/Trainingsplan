@@ -1,74 +1,43 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Trainingsplan</title>
-
-  <!-- PWA / Icons -->
-  <link rel="manifest" href="manifest.webmanifest">
-  <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
-  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
-  <meta name="theme-color" content="#000000">
-
   <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.webmanifest">
 </head>
 <body>
-  <div id="app">
-    <!-- Linke Spalte: Athleten -->
-    <aside class="col col-left">
-      <div class="panel panel-left">
-        <div class="panel-header left">ATHLETEN
-          <button id="addAthleteBtn" class="tiny-btn glow-blue" title="Athlet hinzufügen">＋</button>
-        </div>
-        <div id="athleteList" class="list"></div>
-      </div>
-    </aside>
+  <div class="container">
+    
+    <!-- Athleten -->
+    <div class="column" id="athlete-column">
+      <h2>ATHLETEN <button onclick="addAthlete()">+</button></h2>
+      <ul id="athleteList"></ul>
+    </div>
 
-    <!-- NEU: 2. Spalte – Pläne des Athleten -->
-    <aside class="col col-plans">
-      <div class="panel panel-plans">
-        <div class="panel-header plans">PLÄNE
-          <button id="addPlanBtn" class="tiny-btn glow-blue" title="Neuen Plan anlegen">＋</button>
-        </div>
-        <div id="planList" class="list"></div>
-      </div>
-    </aside>
+    <!-- Pläne -->
+    <div class="column" id="plan-column">
+      <h2>PLÄNE <button onclick="addPlan()">+</button></h2>
+      <ul id="planList"></ul>
+    </div>
 
-    <!-- Mitte: Wochenplan -->
-    <main class="col col-center">
-      <div class="panel panel-mid">
-        <div class="panel-header mid">
-          <span id="planTitle">WOCHENPLAN</span>
-        </div>
+    <!-- Wochenplan -->
+    <div class="column large" id="week-column">
+      <h2>WOCHENPLAN</h2>
+      <div id="week" class="week-grid"></div>
+    </div>
 
-        <div id="weekGrid" class="week-grid"></div>
-      </div>
-    </main>
+    <!-- Übungen -->
+    <div class="column" id="exercise-column">
+      <h2>ÜBUNGEN <button onclick="addExercise()">+</button></h2>
+      <input id="newExerciseInput" placeholder="Neue Übung..." 
+             onkeydown="if(event.key==='Enter') addExercise()">
+      <ul id="exerciseList"></ul>
+    </div>
 
-    <!-- Rechte Spalte: Übungen -->
-    <aside class="col col-right">
-      <div class="panel panel-right">
-        <div class="panel-header right">ÜBUNGEN
-          <button id="addExerciseBtn" class="tiny-btn glow-yellow" title="Neue Übung">＋</button>
-        </div>
-
-        <div class="new-ex-row">
-          <input id="newExerciseInput" placeholder="Neue Übung…" autocomplete="off">
-          <button id="commitExerciseBtn" class="btn glow-yellow">Hinzufügen</button>
-        </div>
-
-        <div id="exerciseList" class="list"></div>
-      </div>
-    </aside>
   </div>
 
   <script src="app.js"></script>
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js').catch(()=>{});
-    }
-  </script>
 </body>
-</html>
+</html>.
