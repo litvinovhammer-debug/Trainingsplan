@@ -281,4 +281,11 @@ document.getElementById("newPlanBtn").addEventListener("click", () => {
 // ===== Init =====
 renderAll();
 
+function renderAll() {
+  renderAthletes();
+  renderPlans();
+  renderWeek();
+  renderExercises();
+}
+
 
