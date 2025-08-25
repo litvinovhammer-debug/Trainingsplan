@@ -3,14 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <title>Trainingsplan</title>
-
-  <!-- PWA / Icons -->
-  <link rel="manifest" href="manifest.webmanifest">
-  <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
-  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
-  <meta name="theme-color" content="#000000">
+  <title>Trainingsplan Retro</title>
 
   <link rel="stylesheet" href="style.css">
 </head>
@@ -27,21 +20,14 @@
       </div>
     </aside>
 
-    <!-- Mitte: Wochenplan + Plan-Tabs -->
+    <!-- Mitte: Wochenplan -->
     <main class="col col-center">
       <div class="panel panel-mid">
-
-        <!-- Kopfzeile mit Add-Button -->
         <div class="panel-header mid">
-          <span id="planTitle">WOCHENPLAN</span>
-          <button id="newPlanBtn" class="tiny-btn glow-green" title="Neuer Plan">Neuer&nbsp;Plan</button>
+          <div id="planTabs" class="plan-tabs"></div>
+          <button id="newPlanBtn" class="tiny-btn glow-green" title="Neuer Plan">＋</button>
         </div>
-
-        <!-- Tabs mit allen Plänen des selektierten Athleten -->
-        <div id="planTabs" class="plan-tabs"></div>
-
-        <!-- Wochenplan -->
-        <div id="weekGrid" class="week-grid"><!-- wird von JS befüllt --></div>
+        <div id="weekGrid" class="week-grid"></div>
       </div>
     </main>
 
@@ -64,10 +50,5 @@
   </div>
 
   <script src="app.js"></script>
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js').catch(()=>{});
-    }
-  </script>
 </body>
-</html>#
+</html>
