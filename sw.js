@@ -1,33 +1,31 @@
-const CACHE_NAME = "trainingsplan-cache-v28";
-const assetsToCache = [
-  "./",
-  "index.html",
-  "style.css",
-  "app.js",
-  "manifest.webmanifest",
-  "icon-192.png",
-  "icon-512.png"
+const CACHE_NAME = "retro-trainingsplan-cache-v29";
+const OFFLINE_URLS = [
+  "./index.html",
+  "./style.css",
+  "./app.js",
+  "./manifest.webmanifest",
+  "./icon-192.png",
+  "./icon-512.png"
 ];
 
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(assetsToCache))
+    caches.open(CACHE_NAME).then(cache => {
+      return cache.addAll(OFFLINE_URLS);
+    })
   );
-  // Sofort aktivieren
-  self.skipWaiting();
 });
 
 self.addEventListener('activate', event => {
+  // Alte Caches bereinigen, nur CACHE_NAME behalten
   event.waitUntil(
-    caches.keys().then(keys => {
-      return Promise.all(
-        keys.map(key => {
-          if (key !== CACHE_NAME) {
-            return caches.delete(key);
-          }
-        })
-      );
-    })
+    caches.keys().then(keys => Promise.all(
+      keys.map(key => {
+        if (key !== CACHE_NAME) {
+          return caches.delete(key);
+        }
+      })
+    ))
   );
   self.clients.claim();
 });
