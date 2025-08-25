@@ -1,54 +1,65 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <title>Trainingsplan Retro</title>
-
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#000000" />
+  <title>Trainingsplan PWA</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="app">
-    <!-- Linke Spalte: Athleten -->
-    <aside class="col col-left">
-      <div class="panel panel-left">
-        <div class="panel-header left">
-          ATHLETEN
-          <button id="addAthleteBtn" class="tiny-btn glow-blue" title="Athlet hinzufügen">＋</button>
+  <div id="app-container">
+    <!-- Athleten Panel -->
+    <div id="athlete-panel" class="panel">
+      <h2>Athleten <button id="add-athlete" class="add-btn" title="Athlet hinzufügen">+</button></h2>
+      <ul id="athlete-list"></ul>
+    </div>
+    <!-- Pläne Panel -->
+    <div id="plan-panel" class="panel">
+      <h2>Pläne <button id="add-plan" class="add-btn" title="Plan hinzufügen">+</button></h2>
+      <ul id="plan-list"></ul>
+    </div>
+    <!-- Wochenplan Panel -->
+    <div id="week-panel" class="panel">
+      <h2>Wochenplan</h2>
+      <div id="week-grid">
+        <div class="day-column" data-day="0">
+          <div class="day-name">Montag</div>
+          <div class="day-entries" id="day-0"></div>
         </div>
-        <div id="athleteList" class="list"></div>
+        <div class="day-column" data-day="1">
+          <div class="day-name">Dienstag</div>
+          <div class="day-entries" id="day-1"></div>
+        </div>
+        <div class="day-column" data-day="2">
+          <div class="day-name">Mittwoch</div>
+          <div class="day-entries" id="day-2"></div>
+        </div>
+        <div class="day-column" data-day="3">
+          <div class="day-name">Donnerstag</div>
+          <div class="day-entries" id="day-3"></div>
+        </div>
+        <div class="day-column" data-day="4">
+          <div class="day-name">Freitag</div>
+          <div class="day-entries" id="day-4"></div>
+        </div>
+        <div class="day-column" data-day="5">
+          <div class="day-name">Samstag</div>
+          <div class="day-entries" id="day-5"></div>
+        </div>
+        <div class="day-column" data-day="6">
+          <div class="day-name">Sonntag</div>
+          <div class="day-entries" id="day-6"></div>
+        </div>
       </div>
-    </aside>
-
-    <!-- Mitte: Wochenplan -->
-    <main class="col col-center">
-      <div class="panel panel-mid">
-        <div class="panel-header mid">
-          <div id="planTabs" class="plan-tabs"></div>
-          <button id="newPlanBtn" class="tiny-btn glow-green" title="Neuer Plan">＋</button>
-        </div>
-        <div id="weekGrid" class="week-grid"></div>
-      </div>
-    </main>
-
-    <!-- Rechte Spalte: Übungen -->
-    <aside class="col col-right">
-      <div class="panel panel-right">
-        <div class="panel-header right">
-          ÜBUNGEN
-          <button id="addExerciseBtn" class="tiny-btn glow-yellow" title="Neue Übung">＋</button>
-        </div>
-
-        <div class="new-ex-row">
-          <input id="newExerciseInput" placeholder="Neue Übung…" autocomplete="off">
-          <button id="commitExerciseBtn" class="btn glow-yellow">Hinzufügen</button>
-        </div>
-
-        <div id="exerciseList" class="list"></div>
-      </div>
-    </aside>
+    </div>
+    <!-- Übungen Panel -->
+    <div id="exercise-panel" class="panel">
+      <h2>Übungen <button id="add-exercise" class="add-btn" title="Übung hinzufügen">+</button></h2>
+      <ul id="exercise-list"></ul>
+    </div>
   </div>
-
   <script src="app.js"></script>
 </body>
 </html>
