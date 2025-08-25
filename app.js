@@ -1,4 +1,4 @@
-// Retro Trainingsplan App Skript
+=// Retro Trainingsplan App Skript
 
 // Daten aus localStorage laden (oder Default-Werte, falls nicht vorhanden)
 let athletes = JSON.parse(localStorage.getItem('athletesData') || '[]');
@@ -403,75 +403,78 @@ planTabsEl.addEventListener('dblclick', e => {
   }
 });
 
-// Neue Übung hinzufügen
-addExerciseBtn.addEventListener('click', () => {
-  const name = newExerciseInput.value.trim();
-  if (name === '') return;
-  exercises.push(name);
-  saveExercises();
-  refreshExerciseList();
-  newExerciseInput.value = '';
+// === Übungen hinzufügen / löschen / Drag & Drop ===
+document.getElementById('addExerciseBtn').addEventListener('click', () => {
+  document.getElementById('newExerciseInput').focus();
 });
 
-// Übungenliste: Klick (Übung einfügen oder löschen)
-exerciseListEl.addEventListener('click', e => {
-  const target = e.target;
-  if (target.classList.contains('delete-btn')) {
-    // Übung löschen
-    const exDiv = target.closest('.exercise');
-    if (!exDiv) return;
-    const index = parseInt(exDiv.dataset.index, 10);
-    if (!isNaN(index)) {
-      exercises.splice(index, 1);
-      saveExercises();
-      refreshExerciseList();
-    }
-    return;
-  }
-  const exDiv = target.closest('.exercise');
-  if (exDiv) {
-    // Übung per Klick in aktives Tagesfeld einfügen
-    if (lastFocusedDayIndex !== null) {
-      const exerciseName = exDiv.textContent.replace('×', '').trim();
-      const athlete = getSelectedAthlete();
-      if (athlete && athlete.currentPlan) {
-        const plan = athlete.plans.find(p => p.id === athlete.currentPlan);
-        if (plan) {
-          const idx = lastFocusedDayIndex;
-          let currentText = plan.days[idx] || '';
-          if (currentText !== '') {
-            currentText += '\\n';
-          }
-          currentText += exerciseName;
-          plan.days[idx] = currentText;
-          saveAthletes();
-          // Tages-Textfeld aktualisieren und Fokus setzen
-          const textarea = document.querySelector('.day-text[data-day-index=\"' + idx + '\"]');
-          if (textarea) {
-            textarea.value = currentText;
-            textarea.focus();
-            textarea.selectionStart = textarea.selectionEnd = textarea.value.length;
-          }
-        }
-      }
-    }
+document.getElementById('newExerciseInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    addExercise();
   }
 });
 
-// Drag-Start auf Übung (für Drag & Drop)
-exerciseListEl.addEventListener('dragstart', e => {
-  const exDiv = e.target.closest('.exercise');
-  if (!exDiv) return;
-  e.dataTransfer.setData('text/plain', exDiv.textContent.replace('×', '').trim());
-  e.dataTransfer.effectAllowed = 'copy';
-  // Ghost-Effekt (Transparenz)
-  exDiv.classList.add('drag-ghost');
+document.getElementById('commitExerciseBtn').addEventListener('click', addExercise);
+
+function addExercise() {
+  const input = document.getElementById('newExerciseInput');
+  const name = input.value.trim();
+  if (!name) return;
+  const exerciseList = document.getElementById('exerciseList');
+
+  const item = document.createElement('div');
+  item.className = 'exercise';
+  item.draggable = true;
+  item.dataset.name = name;
+
+  item.textContent = name;
+  const deleteBtn = document.createElement('span');
+  deleteBtn.textContent = '✖';
+  deleteBtn.className = 'delete-btn';
+  item.appendChild(deleteBtn);
+
+  item.addEventListener('dragstart', (e) => {
+    e.dataTransfer.setData('text/plain', e.currentTarget.dataset.name);
+    e.dataTransfer.effectAllowed = 'copy';
+    e.currentTarget.classList.add('drag-ghost');
+  });
+  item.addEventListener('dragend', (e) => {
+    e.currentTarget.classList.remove('drag-ghost');
+  });
+
+  exerciseList.appendChild(item);
+  input.value = '';
+}
+
+document.querySelectorAll('.day-text').forEach(dayArea => {
+  dayArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+  });
+  dayArea.addEventListener('dragenter', (e) => {
+    e.currentTarget.classList.add('drag-over');
+  });
+  dayArea.addEventListener('dragleave', (e) => {
+    e.currentTarget.classList.remove('drag-over');
+  });
+  dayArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    e.currentTarget.classList.remove('drag-over');
+    const exerciseName = e.dataTransfer.getData('text/plain');
+    if (exerciseName) {
+      e.currentTarget.value += (e.currentTarget.value ? '\n' : '') + exerciseName;
+    }
+  });
 });
-exerciseListEl.addEventListener('dragend', e => {
-  const exDiv = e.target.closest('.exercise');
-  if (!exDiv) return;
-  exDiv.classList.remove('drag-ghost');
+
+document.getElementById('exerciseList').addEventListener('click', (e) => {
+  if (e.target.classList.contains('delete-btn')) {
+    const exerciseItem = e.target.closest('.exercise');
+    if (exerciseItem) exerciseItem.remove();
+  }
 });
+
 
 // Initiale Darstellung beim Laden
 refreshAthleteList();
