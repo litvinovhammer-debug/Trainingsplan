@@ -1,27 +1,41 @@
-  // Service Worker für Offline / Cache
-const CACHE = 'trainer-pwa-v26';   // <— Version anheben bei jedem Update!
-const FILES = [
-  './',
-  './index.html',
-  './style.css',
-  './app.js',
-  './manifest.webmanifest'
+const CACHE_NAME = "trainingsplan-cache-v28";
+const assetsToCache = [
+  "./",
+  "index.html",
+  "style.css",
+  "app.js",
+  "manifest.webmanifest",
+  "icon-192.png",
+  "icon-512.png"
 ];
 
-self.addEventListener('install', e=>{
-  e.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES)));
-});
-
-self.addEventListener('activate', e=>{
-  e.waitUntil(
-    caches.keys().then(keys=>Promise.all(
-      keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))
-    ))
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(cache => cache.addAll(assetsToCache))
   );
+  // Sofort aktivieren
+  self.skipWaiting();
 });
 
-self.addEventListener('fetch', e=>{
-  e.respondWith(
-    caches.match(e.request).then(r=>r||fetch(e.request))
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(keys => {
+      return Promise.all(
+        keys.map(key => {
+          if (key !== CACHE_NAME) {
+            return caches.delete(key);
+          }
+        })
+      );
+    })
+  );
+  self.clients.claim();
+});
+
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    caches.match(event.request).then(response => {
+      return response || fetch(event.request);
+    })
   );
 });
