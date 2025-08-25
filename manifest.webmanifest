@@ -1,7 +1,7 @@
 {
-  "name": "Trainingsplan",
-  "short_name": "Training",
-  "start_url": "./index.html",
+  "name": "Trainingsplan Manager",
+  "short_name": "Trainingsplan",
+  "start_url": ".",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#000000",
