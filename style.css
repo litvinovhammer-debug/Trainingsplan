@@ -194,3 +194,44 @@ html, body {
   border: 1px solid #7CFF7C;
 }
 
+/* --- Plan-Tabs (Mitte, unter der Kopfzeile) --- */
+.plan-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px 0;
+  border-bottom: 1px solid #0f2c0f;
+}
+
+.plan-tab {
+  position: relative;
+  padding: 4px 26px 4px 10px;
+  border-radius: 6px;
+  border: 1px solid #0f2c0f;
+  background: #060a06;
+  color: #7CFF7C;
+  text-shadow: 0 0 6px rgba(124,255,124,.6);
+  font-size: 14px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.plan-tab.active {
+  background: #0f2c0f;
+  border-color: #7CFF7C;
+}
+
+.plan-tab .close {
+  position: absolute;
+  right: 6px; top: 4px;
+  width: 18px; height: 18px;
+  line-height: 18px; text-align: center;
+  border-radius: 4px;
+  background: #8b1b1b;
+  color: #fff;
+  font-weight: 700;
+  font-size: 12px;
+  display: inline-block;
+}
+.plan-tab .close:hover { background:#6f1313; }
