@@ -1,4 +1,4 @@
-const CACHE_NAME = "retro-trainingsplan-cache-v29";
+const CACHE_NAME = "retro-trainingsplan-cache-v30";
 const OFFLINE_URLS = [
   "./index.html",
   "./style.css",
