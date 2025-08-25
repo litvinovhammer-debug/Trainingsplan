@@ -1,4 +1,4 @@
-.(<!doctype html>
+<!doctype html>
 <html lang="de">
 <head>
   <meta charset="utf-8">
@@ -19,32 +19,37 @@
     <!-- Linke Spalte: Athleten -->
     <aside class="col col-left">
       <div class="panel panel-left">
-        <div class="panel-header left">ATHLETEN
+        <div class="panel-header left">
+          ATHLETEN
           <button id="addAthleteBtn" class="tiny-btn glow-blue" title="Athlet hinzufügen">＋</button>
         </div>
         <div id="athleteList" class="list"></div>
       </div>
     </aside>
 
-    <!-- — Mitte: Wochenplan — -->
-<main class="col col-center">
-  <div class="panel panel-mid">
-    <div class="panel-header mid">
-      <div id="planTabs" class="plan-tabs"></div>
-      <button id="newPlanBtn" class="tiny-btn glow-green" title="Neuer Plan">+</button>
-    </div>
+    <!-- Mitte: Wochenplan + Plan-Tabs -->
+    <main class="col col-center">
+      <div class="panel panel-mid">
 
-    <div id="weekGrid" class="week-grid"><!-- JS füllt hier --></div>
-  </div>
-</main>
-      
-    
-          <!-- Cards werden von JS befüllt -->
+        <!-- Kopfzeile mit Add-Button -->
+        <div class="panel-header mid">
+          <span id="planTitle">WOCHENPLAN</span>
+          <button id="newPlanBtn" class="tiny-btn glow-green" title="Neuer Plan">Neuer&nbsp;Plan</button>
+        </div>
+
+        <!-- Tabs mit allen Plänen des selektierten Athleten -->
+        <div id="planTabs" class="plan-tabs"></div>
+
+        <!-- Wochenplan -->
+        <div id="weekGrid" class="week-grid"><!-- wird von JS befüllt --></div>
+      </div>
+    </main>
 
     <!-- Rechte Spalte: Übungen -->
     <aside class="col col-right">
       <div class="panel panel-right">
-        <div class="panel-header right">ÜBUNGEN
+        <div class="panel-header right">
+          ÜBUNGEN
           <button id="addExerciseBtn" class="tiny-btn glow-yellow" title="Neue Übung">＋</button>
         </div>
 
@@ -60,10 +65,9 @@
 
   <script src="app.js"></script>
   <script>
-    // Service Worker registrieren (falls noch nicht aktiv)
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./sw.js').catch(()=>{});
     }
   </script>
 </body>
-</html>
+</html>#
