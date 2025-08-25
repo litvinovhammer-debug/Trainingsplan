@@ -1,4 +1,4 @@
-// ===== Model & Persistenz =====
+#// ===== Model & Persistenz =====
 const DAYS = ["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
 const STORE_KEY = "trainer-data-v1";
 
@@ -232,6 +232,51 @@ function addExerciseFromInput() {
   }
   inp.value = "";
 }
+
+let selectedPlanId = null;
+
+// aktuellen Plan finden
+function getCurrentPlan(athlete) {
+  if (!athlete) return null;
+  return athlete.plans.find(p => p.id === selectedPlanId) || athlete.plans[0] || null;
+}
+
+// Pläne-Leiste rendern
+function renderPlans() {
+  const athlete = getSelectedAthlete();
+  const wrap = document.getElementById("planTabs");
+  wrap.innerHTML = "";
+
+  if (!athlete) return;
+
+  athlete.plans.forEach(p => {
+    const tab = document.createElement("div");
+    tab.className = "plan-tab" + (p.id === selectedPlanId ? " active" : "");
+    tab.textContent = p.title;
+    tab.addEventListener("click", () => {
+      selectedPlanId = p.id;
+      saveData();
+      renderAll();
+    });
+    wrap.appendChild(tab);
+  });
+
+  // falls keiner gewählt → ersten nehmen
+  if (!selectedPlanId && athlete.plans.length) {
+    selectedPlanId = athlete.plans[0].id;
+  }
+}
+
+// neuen Plan erstellen
+document.getElementById("newPlanBtn").addEventListener("click", () => {
+  const athlete = getSelectedAthlete();
+  if (!athlete) return;
+  const plan = emptyPlan("Plan " + (athlete.plans.length + 1));
+  athlete.plans.push(plan);
+  selectedPlanId = plan.id;
+  saveData();
+  renderAll();
+});
 
 // ===== Init =====
 renderAll();
