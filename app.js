@@ -1,442 +1,487 @@
-// Datenstruktur für Athleten, Pläne und Übungen (wird in LocalStorage gespeichert)
-let data = {
-  athletes: [],
-  exercises: []
-};
-let currentAthleteIndex = null;
-let currentPlanIndex = null;
-let selectedExerciseName = null;
-let selectedExerciseEl = null;
+// Retro Trainingsplan App Skript
 
-// Referenzen auf DOM-Elemente
-const athleteListEl = document.getElementById('athlete-list');
-const planListEl = document.getElementById('plan-list');
-const exerciseListEl = document.getElementById('exercise-list');
-const weekDaysEls = [...document.querySelectorAll('.day-entries')];
-const addAthleteBtn = document.getElementById('add-athlete');
-const addPlanBtn = document.getElementById('add-plan');
-const addExerciseBtn = document.getElementById('add-exercise');
+// Daten aus localStorage laden (oder Default-Werte, falls nicht vorhanden)
+let athletes = JSON.parse(localStorage.getItem('athletesData') || '[]');
+let exercises = JSON.parse(localStorage.getItem('exercisesData') || '[]');
+let selectedAthleteId = localStorage.getItem('selectedAthleteId');
+if (selectedAthleteId) selectedAthleteId = parseInt(selectedAthleteId, 10);
 
-// Daten aus LocalStorage laden (falls vorhanden)
-const stored = localStorage.getItem('trainingAppData');
-if (stored) {
-  try {
-    data = JSON.parse(stored);
-  } catch (e) {
-    console.error('Fehler beim Laden der gespeicherten Daten:', e);
-    data = { athletes: [], exercises: [] };
-  }
+// Hilfsfunktionen zum Speichern der Daten
+function saveAthletes() {
+  localStorage.setItem('athletesData', JSON.stringify(athletes));
+}
+function saveExercises() {
+  localStorage.setItem('exercisesData', JSON.stringify(exercises));
+}
+// Hilfsfunktion: aktuell ausgewählten Athleten holen
+function getSelectedAthlete() {
+  if (selectedAthleteId == null) return null;
+  return athletes.find(a => a.id === selectedAthleteId) || null;
 }
 
-// Initiale Auswahl festlegen (ersten Athleten/Plan auswählen, falls vorhanden)
-function initSelection() {
-  if (data.athletes.length > 0) {
-    currentAthleteIndex = 0;
-    if (data.athletes[0].plans && data.athletes[0].plans.length > 0) {
-      currentPlanIndex = 0;
-    } else {
-      currentPlanIndex = null;
-    }
-  } else {
-    currentAthleteIndex = null;
-    currentPlanIndex = null;
-  }
-}
+// UI-Elemente referenzieren
+const athleteListEl = document.getElementById('athleteList');
+const planTabsEl = document.getElementById('planTabs');
+const weekGridEl = document.getElementById('weekGrid');
+const exerciseListEl = document.getElementById('exerciseList');
+const addAthleteBtn = document.getElementById('addAthleteBtn');
+const addPlanBtn = document.getElementById('addPlanBtn');
+const newExerciseInput = document.getElementById('newExerciseInput');
+const addExerciseBtn = document.getElementById('addExerciseBtn');
 
-// Speichert die aktuellen Daten in LocalStorage
-function saveData() {
-  localStorage.setItem('trainingAppData', JSON.stringify(data));
-}
-
-// UI-Rendering: Athletenliste anzeigen
-function renderAthleteList() {
+// UI aktualisieren: Athletenliste erzeugen
+function refreshAthleteList() {
   athleteListEl.innerHTML = '';
-  data.athletes.forEach((athlete, index) => {
-    const li = document.createElement('li');
-    li.textContent = athlete.name;
-    // Lösch-Button für Athlet
-    const delBtn = document.createElement('button');
-    delBtn.textContent = '\u2716';  // "✖" Symbol
-    delBtn.className = 'delete-btn';
-    delBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      deleteAthlete(index);
-    });
-    li.appendChild(delBtn);
-    // Klick zum Auswählen des Athleten
-    li.addEventListener('click', () => {
-      selectAthlete(index);
-    });
-    // Langer Druck (1s) zum Umbenennen
-    addLongPressListener(li, () => {
-      renameAthlete(index);
-    });
-    // Kontextmenü (Rechtsklick/Langdruck) deaktivieren
-    li.addEventListener('contextmenu', (e) => e.preventDefault());
-    // Markierung des aktuell ausgewählten Athleten
-    if (index === currentAthleteIndex) {
-      li.classList.add('selected');
+  athletes.forEach(athlete => {
+    const athleteDiv = document.createElement('div');
+    athleteDiv.className = 'athlete';
+    if (athlete.id === selectedAthleteId) {
+      athleteDiv.classList.add('active');
     }
-    athleteListEl.appendChild(li);
+    athleteDiv.dataset.id = athlete.id;
+    // Name
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'name';
+    nameSpan.textContent = athlete.name;
+    athleteDiv.appendChild(nameSpan);
+    // Löschen-Button
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'delete-btn';
+    deleteBtn.textContent = '×';
+    athleteDiv.appendChild(deleteBtn);
+    athleteListEl.appendChild(athleteDiv);
   });
 }
 
-// UI-Rendering: Pläne-Liste für den aktuellen Athleten
-function renderPlanList() {
-  planListEl.innerHTML = '';
-  if (currentAthleteIndex === null) return;
-  const plans = data.athletes[currentAthleteIndex].plans || [];
-  plans.forEach((plan, index) => {
-    const li = document.createElement('li');
-    li.textContent = plan.name;
-    // Lösch-Button für Plan
-    const delBtn = document.createElement('button');
-    delBtn.textContent = '\u2716';
-    delBtn.className = 'delete-btn';
-    delBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      deletePlan(index);
-    });
-    li.appendChild(delBtn);
-    // Klick zum Auswählen des Plans
-    li.addEventListener('click', () => {
-      selectPlan(index);
-    });
-    // Langer Druck zum Umbenennen des Plans
-    addLongPressListener(li, () => {
-      renamePlan(index);
-    });
-    li.addEventListener('contextmenu', (e) => e.preventDefault());
-    if (index === currentPlanIndex) {
-      li.classList.add('selected');
+// UI aktualisieren: Plan-Tabs für aktuellen Athleten
+function refreshPlanTabs() {
+  planTabsEl.innerHTML = '';
+  const athlete = getSelectedAthlete();
+  if (!athlete) return;
+  athlete.plans.forEach(plan => {
+    const tabDiv = document.createElement('div');
+    tabDiv.className = 'plan-tab';
+    if (plan.id === athlete.currentPlan) {
+      tabDiv.classList.add('active');
     }
-    planListEl.appendChild(li);
+    tabDiv.dataset.id = plan.id;
+    // Plan-Name
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'plan-name';
+    nameSpan.textContent = plan.name;
+    tabDiv.appendChild(nameSpan);
+    // Plan löschen Button
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'delete-btn';
+    deleteBtn.textContent = '×';
+    tabDiv.appendChild(deleteBtn);
+    planTabsEl.appendChild(tabDiv);
   });
 }
 
-// UI-Rendering: Übungenliste anzeigen
-function renderExerciseList() {
-  exerciseListEl.innerHTML = '';
-  data.exercises.forEach((exercise, index) => {
-    const li = document.createElement('li');
-    li.textContent = exercise;
-    // Element draggable machen (Drag & Drop)
-    li.setAttribute('draggable', 'true');
-    li.addEventListener('dragstart', (e) => {
-      e.dataTransfer.setData('text/plain', exercise);
-    });
-    // Lösch-Button für Übung
-    const delBtn = document.createElement('button');
-    delBtn.textContent = '\u2716';
-    delBtn.className = 'delete-btn';
-    delBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      deleteExercise(index);
-    });
-    li.appendChild(delBtn);
-    // Klick (Tap) auf Übung zum Auswählen für Schnelleinfügen
-    li.addEventListener('click', () => {
-      if (selectedExerciseName === exercise) {
-        // Wenn erneut geklickt, Auswahl aufheben
-        selectedExerciseName = null;
-        if (selectedExerciseEl) selectedExerciseEl.classList.remove('selected');
-        selectedExerciseEl = null;
-      } else {
-        // Neue Übung auswählen
-        selectedExerciseName = exercise;
-        if (selectedExerciseEl) selectedExerciseEl.classList.remove('selected');
-        selectedExerciseEl = li;
-        li.classList.add('selected');
-      }
-    });
-    exerciseListEl.appendChild(li);
-  });
-}
-
-// UI-Rendering: Wochenplan für den aktuellen Plan anzeigen
-function renderWeekSchedule() {
-  // Alle Tages-Einträge leeren
-  weekDaysEls.forEach(dayEl => {
-    dayEl.innerHTML = '';
-  });
-  if (currentAthleteIndex === null || currentPlanIndex === null) {
-    return;
-  }
-  const schedule = data.athletes[currentAthleteIndex].plans[currentPlanIndex].schedule;
-  if (!schedule) return;
-  // Sicherstellen, dass 7 Tage-Arrays existieren
-  for (let d = 0; d < 7; d++) {
-    if (!schedule[d]) schedule[d] = [];
-  }
-  schedule.forEach((entries, dayIndex) => {
-    const dayContainer = document.getElementById('day-' + dayIndex);
-    entries.forEach((entry, entryIndex) => {
-      const input = createEntryInput(dayIndex, entry, entryIndex);
-      dayContainer.appendChild(input);
-    });
-  });
-}
-
-// Hilfsfunktion: Erstellt ein Input-Feld für einen Tages-Eintrag
-function createEntryInput(dayIndex, text, entryIndex = null) {
-  const input = document.createElement('input');
-  input.type = 'text';
-  input.value = text;
-  // Beim Verlassen des Feldes (blur): Änderungen speichern oder Eintrag entfernen, falls leer
-  input.addEventListener('blur', () => {
-    const val = input.value.trim();
-    const entries = data.athletes[currentAthleteIndex].plans[currentPlanIndex].schedule[dayIndex];
-    if (val === '') {
-      // Eintrag löschen, wenn Text geleert wurde
-      const idx = (entryIndex !== null) ? entryIndex : entries.indexOf(text);
-      if (idx > -1) {
-        entries.splice(idx, 1);
-      }
-      renderWeekSchedule();
+// UI aktualisieren: Wochenplan-Texte füllen
+function refreshWeekView() {
+  const athlete = getSelectedAthlete();
+  document.querySelectorAll('.day-text').forEach(textarea => {
+    const dayIndex = parseInt(textarea.dataset.dayIndex, 10);
+    if (athlete && athlete.currentPlan) {
+      const plan = athlete.plans.find(p => p.id === athlete.currentPlan);
+      textarea.value = plan ? (plan.days[dayIndex] || '') : '';
     } else {
-      // Textänderung speichern
-      if (entryIndex !== null) {
-        entries[entryIndex] = val;
-      } else {
-        const idx = entries.indexOf(text);
-        if (idx !== -1) {
-          entries[idx] = val;
-        }
-      }
-    }
-    saveData();
-  });
-  // Enter-Taste beendet die Eingabe (entfernt Fokus)
-  input.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      input.blur();
+      textarea.value = '';
     }
   });
-  return input;
 }
 
-// Athleten-Auswahl (bei Klick)
-function selectAthlete(index) {
-  if (currentAthleteIndex === index) return;
-  currentAthleteIndex = index;
-  // Automatisch ersten Plan auswählen (falls vorhanden)
-  const plans = data.athletes[index].plans;
-  currentPlanIndex = (plans && plans.length > 0) ? 0 : null;
-  renderAthleteList();
-  renderPlanList();
-  renderWeekSchedule();
-  saveData();
+// UI aktualisieren: Übungenliste
+function refreshExerciseList() {
+  exerciseListEl.innerHTML = '';
+  exercises.forEach((exName, index) => {
+    const exDiv = document.createElement('div');
+    exDiv.className = 'exercise';
+    exDiv.dataset.index = index;
+    exDiv.textContent = exName;
+    // Löschen-Button hinzufügen
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'delete-btn';
+    deleteBtn.textContent = '×';
+    exDiv.appendChild(deleteBtn);
+    exerciseListEl.appendChild(exDiv);
+  });
 }
 
-// Plan-Auswahl (bei Klick)
-function selectPlan(index) {
-  if (currentPlanIndex === index) return;
-  currentPlanIndex = index;
-  renderPlanList();
-  renderWeekSchedule();
-  saveData();
+// Trainingsplan-Text speichern bei Änderungen
+function updatePlanDay(dayIndex, text) {
+  const athlete = getSelectedAthlete();
+  if (!athlete || !athlete.currentPlan) return;
+  const plan = athlete.plans.find(p => p.id === athlete.currentPlan);
+  if (!plan) return;
+  plan.days[dayIndex] = text;
+  saveAthletes();
 }
 
-// Neuen Athleten hinzufügen
-function addAthlete() {
-  const name = prompt('Name des Athleten:');
-  if (!name) return;
-  data.athletes.push({ name: name.trim(), plans: [] });
-  // Neu angelegten Athleten auswählen
-  currentAthleteIndex = data.athletes.length - 1;
-  currentPlanIndex = null;
-  renderAthleteList();
-  renderPlanList();
-  renderWeekSchedule();
-  saveData();
-}
+// Zuletzt fokussierter Tag (für Klick-zu-Einfügen von Übungen)
+let lastFocusedDayIndex = null;
 
-// Athleten löschen
-function deleteAthlete(index) {
-  const athleteName = data.athletes[index].name;
-  if (!confirm(`Athlet "${athleteName}" wirklich löschen?`)) return;
-  data.athletes.splice(index, 1);
-  // Auswahl anpassen
-  if (data.athletes.length === 0) {
-    currentAthleteIndex = null;
-    currentPlanIndex = null;
-  } else if (index === currentAthleteIndex) {
-    // Wenn der gelöschte Athlet der aktuell ausgewählte war
-    currentAthleteIndex = (index >= data.athletes.length) ? data.athletes.length - 1 : index;
-    const plans = data.athletes[currentAthleteIndex].plans;
-    currentPlanIndex = (plans && plans.length > 0) ? 0 : null;
-  } else {
-    if (index < currentAthleteIndex) {
-      currentAthleteIndex -= 1;
-    }
-    // currentPlanIndex bleibt unverändert (weiterhin gültiger Plan desselben Athleten)
-  }
-  renderAthleteList();
-  renderPlanList();
-  renderWeekSchedule();
-  saveData();
-}
-
-// Athleten umbenennen (per Prompt)
-function renameAthlete(index) {
-  const newName = prompt('Neuer Name für Athleten:', data.athletes[index].name);
-  if (newName) {
-    data.athletes[index].name = newName.trim();
-    renderAthleteList();
-    saveData();
-  }
-}
-
-// Neuen Plan hinzufügen (für aktuellen Athleten)
-function addPlan() {
-  if (currentAthleteIndex === null) {
-    alert('Kein Athlet ausgewählt.');
-    return;
-  }
-  const planName = prompt('Name des neuen Plans:');
-  if (!planName) return;
-  const plan = { name: planName.trim(), schedule: [[], [], [], [], [], [], []] };
-  data.athletes[currentAthleteIndex].plans.push(plan);
-  // Neu angelegten Plan auswählen
-  currentPlanIndex = data.athletes[currentAthleteIndex].plans.length - 1;
-  renderPlanList();
-  renderWeekSchedule();
-  saveData();
-}
-
-// Plan löschen
-function deletePlan(index) {
-  if (currentAthleteIndex === null) return;
-  const planName = data.athletes[currentAthleteIndex].plans[index].name;
-  if (!confirm(`Plan "${planName}" wirklich löschen?`)) return;
-  data.athletes[currentAthleteIndex].plans.splice(index, 1);
-  if (data.athletes[currentAthleteIndex].plans.length === 0) {
-    currentPlanIndex = null;
-  } else if (index === currentPlanIndex) {
-    // Gelöschter Plan war ausgewählt -> anderen Plan auswählen
-    currentPlanIndex = (index >= data.athletes[currentAthleteIndex].plans.length) 
-      ? data.athletes[currentAthleteIndex].plans.length - 1 
-      : index;
-  } else {
-    if (index < currentPlanIndex) {
-      currentPlanIndex -= 1;
-    }
-  }
-  renderPlanList();
-  renderWeekSchedule();
-  saveData();
-}
-
-// Plan umbenennen
-function renamePlan(index) {
-  if (currentAthleteIndex === null) return;
-  const newName = prompt('Neuer Name für Plan:', data.athletes[currentAthleteIndex].plans[index].name);
-  if (newName) {
-    data.athletes[currentAthleteIndex].plans[index].name = newName.trim();
-    renderPlanList();
-    saveData();
-  }
-}
-
-// Neue Übung hinzufügen
-function addExercise() {
-  const name = prompt('Name der neuen Übung:');
-  if (!name) return;
-  data.exercises.push(name.trim());
-  renderExerciseList();
-  saveData();
-}
-
-// Übung löschen
-function deleteExercise(index) {
-  const exName = data.exercises[index];
-  if (!confirm(`Übung "${exName}" wirklich löschen?`)) return;
-  if (selectedExerciseName === exName) {
-    selectedExerciseName = null;
-    selectedExerciseEl = null;
-  }
-  data.exercises.splice(index, 1);
-  renderExerciseList();
-  saveData();
-}
-
-// Hilfsfunktion: Ereignis für langen Druck (1 Sekunde) registrieren
-function addLongPressListener(element, callback) {
-  let timer = null;
-  const touchDuration = 1000;
-  const start = (e) => {
-    e.preventDefault();
-    timer = setTimeout(() => {
-      timer = null;
-      callback();
-    }, touchDuration);
-  };
-  const cancel = () => {
-    if (timer) {
-      clearTimeout(timer);
-      timer = null;
-    }
-  };
-  element.addEventListener('mousedown', start);
-  element.addEventListener('touchstart', start);
-  element.addEventListener('mouseout', cancel);
-  element.addEventListener('mouseup', cancel);
-  element.addEventListener('mouseleave', cancel);
-  element.addEventListener('touchend', cancel);
-  element.addEventListener('touchmove', cancel);
-}
-
-// Übung in den Wochenplan einfügen (Drag & Drop oder Tap)
-function addExerciseToDay(dayIndex, exerciseName) {
-  if (currentAthleteIndex === null || currentPlanIndex === null) return;
-  const entries = data.athletes[currentAthleteIndex].plans[currentPlanIndex].schedule[dayIndex];
-  entries.push(exerciseName);
-  // Neuen Eintrag in der UI hinzufügen
-  const input = createEntryInput(dayIndex, exerciseName, entries.length - 1);
-  document.getElementById('day-' + dayIndex).appendChild(input);
-  input.focus();
-  saveData();
-}
-
-// Auswahl initialisieren und UI rendern
-initSelection();
-renderAthleteList();
-renderPlanList();
-renderExerciseList();
-renderWeekSchedule();
-
-// Event-Listener für die Plus-Buttons
-addAthleteBtn.addEventListener('click', addAthlete);
-addPlanBtn.addEventListener('click', addPlan);
-addExerciseBtn.addEventListener('click', addExercise);
-
-// Drag & Drop Events für die Tages-Spalten
-weekDaysEls.forEach((dayEl, index) => {
-  dayEl.addEventListener('dragover', (e) => {
+// Event Listener: Textänderungen und Drag&Drop in Tages-Textfeldern
+document.querySelectorAll('.day-text').forEach(textarea => {
+  // Textänderung -> speichern
+  textarea.addEventListener('input', e => {
+    const idx = parseInt(e.target.dataset.dayIndex, 10);
+    updatePlanDay(idx, e.target.value);
+  });
+  // Fokus merken
+  textarea.addEventListener('focus', e => {
+    lastFocusedDayIndex = parseInt(e.target.dataset.dayIndex, 10);
+  });
+  // Fokus-Verlust (nach kurzer Zeit resetten)
+  textarea.addEventListener('blur', e => {
+    setTimeout(() => { lastFocusedDayIndex = null; }, 100);
+  });
+  // Drag & Drop Events für Übungen
+  textarea.addEventListener('dragover', e => {
     e.preventDefault();
   });
-  dayEl.addEventListener('drop', (e) => {
-    e.preventDefault();
-    const exerciseName = e.dataTransfer.getData('text/plain');
-    if (exerciseName) {
-      addExerciseToDay(index, exerciseName);
-    }
+  textarea.addEventListener('dragenter', e => {
+    e.target.classList.add('drag-over');
   });
-  // Tap auf leere Fläche eines Tages, um ausgewählte Übung hinzuzufügen
-  dayEl.addEventListener('click', (e) => {
-    if (e.target !== dayEl) return;  // nicht auslösen, wenn auf bestehende Einträge geklickt
-    if (selectedExerciseName) {
-      addExerciseToDay(index, selectedExerciseName);
-      // Übung bleibt ausgewählt, sodass sie in mehrere Tage eingefügt werden kann
+  textarea.addEventListener('dragleave', e => {
+    e.target.classList.remove('drag-over');
+  });
+  textarea.addEventListener('drop', e => {
+    e.preventDefault();
+    e.target.classList.remove('drag-over');
+    const exerciseText = e.dataTransfer.getData('text/plain');
+    if (exerciseText) {
+      const idx = parseInt(e.target.dataset.dayIndex, 10);
+      const value = e.target.value;
+      // An Einfügeposition oder am Ende einfügen
+      let pos = e.target.selectionStart;
+      if (pos == null) pos = value.length;
+      const newText = value.substring(0, pos) + exerciseText + value.substring(pos);
+      e.target.value = newText;
+      // Cursor hinter eingefügtem Text setzen
+      const cursorPos = pos + exerciseText.length;
+      e.target.selectionStart = e.target.selectionEnd = cursorPos;
+      updatePlanDay(idx, newText);
     }
   });
 });
 
-// Service Worker Registrierung (für PWA-Funktionalität)
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js')
-      .catch(err => console.error('ServiceWorker-Registrierung fehlgeschlagen:', err));
+// Athlet hinzufügen
+addAthleteBtn.addEventListener('click', () => {
+  const newId = athletes.length > 0 ? Math.max(...athletes.map(a => a.id)) + 1 : 1;
+  const defaultName = 'Athlet ' + (athletes.length + 1);
+  const newAthlete = {
+    id: newId,
+    name: defaultName,
+    currentPlan: null,
+    plans: []
+  };
+  // Ersten Plan automatisch hinzufügen
+  const firstPlanId = 1;
+  newAthlete.plans.push({ id: firstPlanId, name: 'Plan 1', days: ['', '', '', '', '', '', ''] });
+  newAthlete.currentPlan = firstPlanId;
+  athletes.push(newAthlete);
+  selectedAthleteId = newAthlete.id;
+  localStorage.setItem('selectedAthleteId', selectedAthleteId);
+  saveAthletes();
+  // UI aktualisieren
+  refreshAthleteList();
+  refreshPlanTabs();
+  refreshWeekView();
+});
+
+// Athletenliste: Klick-Events für Auswahl/Löschen
+athleteListEl.addEventListener('click', e => {
+  const target = e.target;
+  if (target.classList.contains('delete-btn')) {
+    // Athlet löschen
+    const athleteDiv = target.closest('.athlete');
+    if (!athleteDiv) return;
+    const athleteId = parseInt(athleteDiv.dataset.id, 10);
+    const idx = athletes.findIndex(a => a.id === athleteId);
+    if (idx !== -1) {
+      athletes.splice(idx, 1);
+      saveAthletes();
+      // Auswahl wechseln, wenn der gelöschte Athlet ausgewählt war
+      if (selectedAthleteId === athleteId) {
+        if (athletes.length > 0) {
+          const newIndex = idx < athletes.length ? idx : athletes.length - 1;
+          selectedAthleteId = athletes[newIndex].id;
+        } else {
+          selectedAthleteId = null;
+        }
+        localStorage.setItem('selectedAthleteId', selectedAthleteId || '');
+      }
+      refreshAthleteList();
+      refreshPlanTabs();
+      refreshWeekView();
+    }
+    return;
+  }
+  // Athlet auswählen
+  const athleteDiv = target.closest('.athlete');
+  if (athleteDiv) {
+    const athleteId = parseInt(athleteDiv.dataset.id, 10);
+    if (selectedAthleteId !== athleteId) {
+      selectedAthleteId = athleteId;
+      localStorage.setItem('selectedAthleteId', selectedAthleteId);
+      document.querySelectorAll('.athlete').forEach(el => {
+        el.classList.toggle('active', parseInt(el.dataset.id, 10) === athleteId);
+      });
+      // Plan-Tabs für neuen Athleten anzeigen
+      const athlete = getSelectedAthlete();
+      if (athlete) {
+        if (athlete.plans.length === 0) {
+          athlete.currentPlan = null;
+        }
+        if (athlete.plans.length > 0 && !athlete.plans.find(p => p.id === athlete.currentPlan)) {
+          athlete.currentPlan = athlete.plans[0].id;
+        }
+      }
+      refreshPlanTabs();
+      refreshWeekView();
+      saveAthletes();
+    }
+  }
+});
+
+// Athletenliste: Doppelklick auf Athlet (Umbenennen)
+athleteListEl.addEventListener('dblclick', e => {
+  const athleteDiv = e.target.closest('.athlete');
+  if (!athleteDiv || e.target.classList.contains('delete-btn')) return;
+  // Falls gerade im Bearbeitungsmodus, nichts tun
+  if (athleteDiv.querySelector('input')) return;
+  const nameSpan = athleteDiv.querySelector('.name');
+  const oldName = nameSpan.textContent;
+  // Name-Span durch ein Input ersetzen
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.value = oldName;
+  athleteDiv.insertBefore(input, nameSpan);
+  athleteDiv.removeChild(nameSpan);
+  input.focus();
+  input.select();
+  // Eingabe-Events (Enter/Escape/Blur)
+  input.addEventListener('keydown', ev => {
+    if (ev.key === 'Enter') {
+      ev.preventDefault();
+      input.blur();
+    } else if (ev.key === 'Escape') {
+      ev.preventDefault();
+      cancelEdit();
+    }
   });
+  input.addEventListener('blur', () => {
+    if (!input) return;
+    const newName = input.value.trim();
+    if (newName === '') {
+      cancelEdit();
+      return;
+    }
+    const athleteId = parseInt(athleteDiv.dataset.id, 10);
+    const athlete = athletes.find(a => a.id === athleteId);
+    if (athlete) {
+      athlete.name = newName;
+      saveAthletes();
+    }
+    finishEdit(newName);
+  });
+  function finishEdit(name) {
+    const newSpan = document.createElement('span');
+    newSpan.className = 'name';
+    newSpan.textContent = name;
+    athleteDiv.insertBefore(newSpan, input);
+    athleteDiv.removeChild(input);
+  }
+  function cancelEdit() {
+    finishEdit(oldName);
+  }
+});
+
+// Neuen Plan hinzufügen
+addPlanBtn.addEventListener('click', () => {
+  const athlete = getSelectedAthlete();
+  if (!athlete) return;
+  const newPlanId = athlete.plans.length > 0 ? Math.max(...athlete.plans.map(p => p.id)) + 1 : 1;
+  const defaultPlanName = 'Plan ' + (athlete.plans.length + 1);
+  const newPlan = { id: newPlanId, name: defaultPlanName, days: ['', '', '', '', '', '', ''] };
+  athlete.plans.push(newPlan);
+  athlete.currentPlan = newPlan.id;
+  saveAthletes();
+  refreshPlanTabs();
+  refreshWeekView();
+});
+
+// Plan-Tabs: Klick (Plan aktivieren oder löschen)
+planTabsEl.addEventListener('click', e => {
+  const target = e.target;
+  if (target.classList.contains('delete-btn')) {
+    // Plan löschen
+    const tabDiv = target.closest('.plan-tab');
+    if (!tabDiv) return;
+    const planId = parseInt(tabDiv.dataset.id, 10);
+    const athlete = getSelectedAthlete();
+    if (!athlete) return;
+    const planIndex = athlete.plans.findIndex(p => p.id === planId);
+    if (planIndex !== -1) {
+      athlete.plans.splice(planIndex, 1);
+      if (athlete.currentPlan === planId) {
+        athlete.currentPlan = athlete.plans.length > 0 ? athlete.plans[0].id : null;
+      }
+      saveAthletes();
+      refreshPlanTabs();
+      refreshWeekView();
+    }
+    return;
+  }
+  const tabDiv = e.target.closest('.plan-tab');
+  if (tabDiv) {
+    const planId = parseInt(tabDiv.dataset.id, 10);
+    const athlete = getSelectedAthlete();
+    if (!athlete) return;
+    if (athlete.currentPlan !== planId) {
+      athlete.currentPlan = planId;
+      saveAthletes();
+      document.querySelectorAll('.plan-tab').forEach(tab => {
+        tab.classList.toggle('active', parseInt(tab.dataset.id, 10) === planId);
+      });
+      refreshWeekView();
+    }
+  }
+});
+
+// Plan-Tab Doppelklick (Plan umbenennen)
+planTabsEl.addEventListener('dblclick', e => {
+  const tabDiv = e.target.closest('.plan-tab');
+  if (!tabDiv || e.target.classList.contains('delete-btn')) return;
+  if (tabDiv.querySelector('input')) return; // schon im Editiermodus
+  const planId = parseInt(tabDiv.dataset.id, 10);
+  const athlete = getSelectedAthlete();
+  if (!athlete) return;
+  const plan = athlete.plans.find(p => p.id === planId);
+  if (!plan) return;
+  const nameSpan = tabDiv.querySelector('.plan-name');
+  const oldName = nameSpan.textContent;
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.value = oldName;
+  tabDiv.insertBefore(input, nameSpan);
+  tabDiv.removeChild(nameSpan);
+  input.focus();
+  input.select();
+  input.addEventListener('keydown', ev => {
+    if (ev.key === 'Enter') {
+      ev.preventDefault();
+      input.blur();
+    } else if (ev.key === 'Escape') {
+      ev.preventDefault();
+      cancelEdit();
+    }
+  });
+  input.addEventListener('blur', () => {
+    if (!input) return;
+    const newName = input.value.trim();
+    if (newName === '') {
+      cancelEdit();
+      return;
+    }
+    plan.name = newName;
+    saveAthletes();
+    finishEdit(newName);
+  });
+  function finishEdit(name) {
+    const newSpan = document.createElement('span');
+    newSpan.className = 'plan-name';
+    newSpan.textContent = name;
+    tabDiv.insertBefore(newSpan, input);
+    tabDiv.removeChild(input);
+  }
+  function cancelEdit() {
+    finishEdit(oldName);
+  }
+});
+
+// Neue Übung hinzufügen
+addExerciseBtn.addEventListener('click', () => {
+  const name = newExerciseInput.value.trim();
+  if (name === '') return;
+  exercises.push(name);
+  saveExercises();
+  refreshExerciseList();
+  newExerciseInput.value = '';
+});
+
+// Übungenliste: Klick (Übung einfügen oder löschen)
+exerciseListEl.addEventListener('click', e => {
+  const target = e.target;
+  if (target.classList.contains('delete-btn')) {
+    // Übung löschen
+    const exDiv = target.closest('.exercise');
+    if (!exDiv) return;
+    const index = parseInt(exDiv.dataset.index, 10);
+    if (!isNaN(index)) {
+      exercises.splice(index, 1);
+      saveExercises();
+      refreshExerciseList();
+    }
+    return;
+  }
+  const exDiv = target.closest('.exercise');
+  if (exDiv) {
+    // Übung per Klick in aktives Tagesfeld einfügen
+    if (lastFocusedDayIndex !== null) {
+      const exerciseName = exDiv.textContent.replace('×', '').trim();
+      const athlete = getSelectedAthlete();
+      if (athlete && athlete.currentPlan) {
+        const plan = athlete.plans.find(p => p.id === athlete.currentPlan);
+        if (plan) {
+          const idx = lastFocusedDayIndex;
+          let currentText = plan.days[idx] || '';
+          if (currentText !== '') {
+            currentText += '\\n';
+          }
+          currentText += exerciseName;
+          plan.days[idx] = currentText;
+          saveAthletes();
+          // Tages-Textfeld aktualisieren und Fokus setzen
+          const textarea = document.querySelector('.day-text[data-day-index=\"' + idx + '\"]');
+          if (textarea) {
+            textarea.value = currentText;
+            textarea.focus();
+            textarea.selectionStart = textarea.selectionEnd = textarea.value.length;
+          }
+        }
+      }
+    }
+  }
+});
+
+// Drag-Start auf Übung (für Drag & Drop)
+exerciseListEl.addEventListener('dragstart', e => {
+  const exDiv = e.target.closest('.exercise');
+  if (!exDiv) return;
+  e.dataTransfer.setData('text/plain', exDiv.textContent.replace('×', '').trim());
+  e.dataTransfer.effectAllowed = 'copy';
+  // Ghost-Effekt (Transparenz)
+  exDiv.classList.add('drag-ghost');
+});
+exerciseListEl.addEventListener('dragend', e => {
+  const exDiv = e.target.closest('.exercise');
+  if (!exDiv) return;
+  exDiv.classList.remove('drag-ghost');
+});
+
+// Initiale Darstellung beim Laden
+refreshAthleteList();
+if (athletes.length > 0) {
+  if (!selectedAthleteId || !athletes.find(a => a.id === selectedAthleteId)) {
+    selectedAthleteId = athletes[0].id;
+    localStorage.setItem('selectedAthleteId', selectedAthleteId);
+  }
 }
+refreshAthleteList(); // erneut aufrufen, um evtl. Auswahl hervorzuheben
+refreshPlanTabs();
+refreshWeekView();
+refreshExerciseList();
