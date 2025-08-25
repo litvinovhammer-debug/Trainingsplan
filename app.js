@@ -1,8 +1,39 @@
-// ===== Model & Persistenz =====
+=// ===== Model & Persistenz =====
 const DAYS = ["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
 const STORE_KEY = "trainer-data-v1";
 
-let data = loadData() || seedData();
+let data = loadData()# || seedData();
+data = normalizeData(data);
+
+// …
+function normalizeData(d) {
+  // Fallback wenn irgendwas korrupt ist
+  if (!d || typeof d !== 'object') return seedData();
+
+  d.athletes = Array.isArray(d.athletes) ? d.athletes : [];
+  d.exercises = Array.isArray(d.exercises) ? d.exercises : [];
+
+  // Wenn gar keine Athleten (oder nur leere Struktur) vorhanden -> seed
+  if (!d.athletes.length) return seedData();
+
+  // Felder je Athlet absichern
+  d.athletes.forEach(a => {
+    if (typeof a.id !== 'string') a.id = uuid();
+    if (!Array.isArray(a.plans) || !a.plans.length) a.plans = [emptyPlan('Plan 1')];
+    if (typeof a.selectedPlan !== 'number') a.selectedPlan = 0;
+    a.selectedPlan = Math.max(0, Math.min(a.selectedPlan, a.plans.length - 1));
+    // Tage in jedem Plan absichern
+    a.plans.forEach(p => {
+      p.title = (p.title || 'Plan');
+      p.days = p.days && typeof p.days === 'object' ? p.days : {};
+      DAYS.forEach(dn => { if (typeof p.days[dn] !== 'string') p.days[dn] = ''; });
+    });
+  });
+
+  // Übungen als String-Liste absichern
+  d.exercises = d.exercises.filter(x => typeof x === 'string' && x.trim());
+  return d;
+}
 let selectedAthleteId = data.athletes.length ? data.athletes[0].id : null;
 
 // initialer Datensatz
