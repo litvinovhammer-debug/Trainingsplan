@@ -42,6 +42,7 @@ function getCurrentPlan(athlete) {
 // ===== Rendering =====
 function renderAll() {
   renderAthletes();
+  renderPlans();
   renderWeek();
   renderExercises();
 }
@@ -274,18 +275,12 @@ document.getElementById("newPlanBtn").addEventListener("click", () => {
   const plan = emptyPlan("Plan " + (athlete.plans.length + 1));
   athlete.plans.push(plan);
   selectedPlanId = plan.id;
-  saveData();
+  saveData();#
   renderAll();
 });
 
 // ===== Init =====
-renderAll();
+renderAll();#
 
-function renderAll() {
-  renderAthletes();
-  renderPlans();
-  renderWeek();
-  renderExercises();
-}
 
 
