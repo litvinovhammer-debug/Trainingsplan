@@ -171,3 +171,26 @@ html, body {
 *::-webkit-scrollbar-thumb { background: #1a1a1a; border-radius: 8px; }
 *::-webkit-scrollbar-track { background: #0a0a0a; }
 
+.plan-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.plan-tab {
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid #0f2c0f;
+  background: #060a06;
+  color: #7CFF7C;
+  cursor: pointer;
+  text-shadow: 0 0 6px rgba(124,255,124,.6);
+  font-size: 14px;
+}
+
+.plan-tab.active {
+  background: #0f2c0f;
+  border: 1px solid #7CFF7C;
+}
+
