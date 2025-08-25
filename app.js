@@ -1,25 +1,30 @@
-#// ===== Model & Persistenz =====
+// ===== Model & Persistenz =====
 const DAYS = ["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
 const STORE_KEY = "trainer-data-v1";
 
 let data = loadData() || seedData();
 let selectedAthleteId = data.athletes.length ? data.athletes[0].id : null;
 
+// initialer Datensatz
 function seedData() {
   return {
     athletes: [
-      { id: uuid(), name: "Emma",    plans: [emptyPlan("Plan 1")] },
-      { id: uuid(), name: "Filipp",  plans: [emptyPlan("Plan 1")] }
+      { id: uuid(), name: "Emma",   selectedPlan: 0, plans: [emptyPlan("Plan 1")] },
+      { id: uuid(), name: "Filipp", selectedPlan: 0, plans: [emptyPlan("Plan 1")] }
     ],
     exercises: ["Test", "Reißen"]
   };
 }
+
 function emptyPlan(title = "Neuer Plan") {
   const days = {};
   DAYS.forEach(d => days[d] = "");
   return { id: uuid(), title, days };
 }
-function uuid() { return Math.random().toString(36).slice(2) + Date.now().toString(36); }
+
+function uuid() {
+  return Math.random().toString(36).slice(2) + Date.now().toString(36);
+}
 
 function saveData() {
   localStorage.setItem(STORE_KEY, JSON.stringify(data));
@@ -34,15 +39,15 @@ function getSelectedAthlete() {
   return data.athletes.find(a => a.id === selectedAthleteId) || null;
 }
 function getCurrentPlan(athlete) {
-  // aktuell: immer Plan 0 (du kannst später Plan-Auswahl ergänzen)
-  if (!athlete) return null;
-  return athlete.plans[0] || null;
+  if (!athlete || !athlete.plans.length) return null;
+  const idx = Math.max(0, Math.min(athlete.selectedPlan ?? 0, athlete.plans.length - 1));
+  return athlete.plans[idx];
 }
 
 // ===== Rendering =====
 function renderAll() {
   renderAthletes();
-  renderPlans();
+  renderPlans();   // <- Tabs zuerst, damit renderWeek den richtigen Plan-Titel zeigt
   renderWeek();
   renderExercises();
 }
@@ -61,7 +66,6 @@ function renderAthletes() {
       renderAll();
     });
 
-    // kurzer/long press: Name editieren
     const input = document.createElement("input");
     input.value = a.name;
     input.addEventListener("change", () => {
@@ -70,7 +74,6 @@ function renderAthletes() {
       renderAthletes();
     });
 
-    // Entfernen-Button (optional)
     const del = document.createElement("button");
     del.className = "tiny-btn glow-blue";
     del.textContent = "−";
@@ -80,8 +83,7 @@ function renderAthletes() {
       const idx = data.athletes.findIndex(x => x.id === a.id);
       if (idx >= 0) {
         data.athletes.splice(idx, 1);
-        if (data.athletes.length) selectedAthleteId = data.athletes[0].id;
-        else selectedAthleteId = null;
+        selectedAthleteId = data.athletes.length ? data.athletes[0].id : null;
         saveData();
         renderAll();
       }
@@ -91,6 +93,98 @@ function renderAthletes() {
     row.appendChild(del);
     wrap.appendChild(row);
   });
+}
+
+// -- Plan-Tabs (Mitte, unter Header)
+function renderPlans() {
+  const tabs = document.getElementById("planTabs");
+  tabs.innerHTML = "";
+
+  const athlete = getSelectedAthlete();
+  const titleEl = document.getElementById("planTitle");
+
+  if (!athlete) {
+    titleEl.textContent = "WOCHENPLAN";
+    return;
+  }
+
+  // Titel zeigt den aktuellen Plan
+  const current = getCurrentPlan(athlete);
+  titleEl.textContent = current ? current.title : "WOCHENPLAN";
+
+  athlete.plans.forEach((p, i) => {
+    const tab = document.createElement("div");
+    tab.className = "plan-tab" + (i === (athlete.selectedPlan ?? 0) ? " active" : "");
+    tab.textContent = p.title;
+
+    // Klick = Auswahl
+    tab.addEventListener("click", () => {
+      athlete.selectedPlan = i;
+      saveData();
+      renderPlans();
+      renderWeek();
+    });
+
+    // Langer Druck ~1s = umbenennen
+    let pressTimer;
+    tab.addEventListener("touchstart", startHold);
+    tab.addEventListener("mousedown", startHold);
+    tab.addEventListener("touchend", clearHold);
+    tab.addEventListener("mouseup", clearHold);
+    tab.addEventListener("mouseleave", clearHold);
+
+    function startHold(e){
+      clearHold();
+      pressTimer = setTimeout(() => {
+        const neu = prompt("Plan umbenennen:", p.title);
+        if (neu && neu.trim()) {
+          p.title = neu.trim();
+          saveData();
+          renderPlans();
+          renderWeek();
+        }
+      }, 1000);
+    }
+    function clearHold(){ if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; } }
+
+    // Löschen-Knopf
+    const close = document.createElement("span");
+    close.className = "close";
+    close.textContent = "×";
+    close.title = "Plan löschen";
+    close.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (athlete.plans.length === 1) {
+        // letzten Plan nicht ersatzlos löschen: stattdessen leeren
+        athlete.plans[0] = emptyPlan("Plan 1");
+        athlete.selectedPlan = 0;
+      } else {
+        const delIdx = i;
+        athlete.plans.splice(delIdx, 1);
+        if ((athlete.selectedPlan ?? 0) >= athlete.plans.length) {
+          athlete.selectedPlan = athlete.plans.length - 1;
+        }
+      }
+      saveData();
+      renderPlans();
+      renderWeek();
+    });
+
+    tab.appendChild(close);
+    tabs.appendChild(tab);
+  });
+
+  // Button „Neuer Plan“
+  const addBtn = document.getElementById("newPlanBtn");
+  addBtn.onclick = () => {
+    if (!athlete) return;
+    const p = emptyPlan("Neuer Plan");
+    athlete.plans.push(p);
+    athlete.selectedPlan = athlete.plans.length - 1;
+    saveData();
+    renderPlans();
+    renderWeek();
+  };
 }
 
 // -- Wochenplan Mitte
@@ -173,7 +267,6 @@ function renderExercises() {
     // Drag (Maus/Trackpad)
     div.addEventListener("dragstart", (e) => {
       e.dataTransfer.setData("text/plain", name);
-      // kleines transparentes Ghost, damit iPad den Drag akzeptiert
       if (e.dataTransfer.setDragImage) {
         const ghost = document.createElement("canvas");
         ghost.width = 1; ghost.height = 1;
@@ -198,17 +291,9 @@ function renderExercises() {
 
 // ===== Logik: Neues anlegen =====
 document.getElementById("addAthleteBtn").addEventListener("click", () => {
-  const a = { id: uuid(), name: "Neuer Athlet", plans: [emptyPlan("Plan 1")] };
+  const a = { id: uuid(), name: "Neuer Athlet", selectedPlan: 0, plans: [emptyPlan("Plan 1")] };
   data.athletes.push(a);
   selectedAthleteId = a.id;
-  saveData();
-  renderAll();
-});
-
-document.getElementById("newPlanBtn").addEventListener("click", () => {
-  const athlete = getSelectedAthlete();
-  if (!athlete) return;
-  athlete.plans.unshift(emptyPlan("Neuer Plan"));
   saveData();
   renderAll();
 });
@@ -234,53 +319,5 @@ function addExerciseFromInput() {
   inp.value = "";
 }
 
-let selectedPlanId = null;
-
-// aktuellen Plan finden
-function getCurrentPlan(athlete) {
-  if (!athlete) return null;
-  return athlete.plans.find(p => p.id === selectedPlanId) || athlete.plans[0] || null;
-}
-
-// Pläne-Leiste rendern
-function renderPlans() {
-  const athlete = getSelectedAthlete();
-  const wrap = document.getElementById("planTabs");
-  wrap.innerHTML = "";
-
-  if (!athlete) return;
-
-  athlete.plans.forEach(p => {
-    const tab = document.createElement("div");
-    tab.className = "plan-tab" + (p.id === selectedPlanId ? " active" : "");
-    tab.textContent = p.title;
-    tab.addEventListener("click", () => {
-      selectedPlanId = p.id;
-      saveData();
-      renderAll();
-    });
-    wrap.appendChild(tab);
-  });
-
-  // falls keiner gewählt → ersten nehmen
-  if (!selectedPlanId && athlete.plans.length) {
-    selectedPlanId = athlete.plans[0].id;
-  }
-}
-
-// neuen Plan erstellen
-document.getElementById("newPlanBtn").addEventListener("click", () => {
-  const athlete = getSelectedAthlete();
-  if (!athlete) return;
-  const plan = emptyPlan("Plan " + (athlete.plans.length + 1));
-  athlete.plans.push(plan);
-  selectedPlanId = plan.id;
-  saveData();#
-  renderAll();
-});
-
 // ===== Init =====
-renderAll();#
-
-
-
+renderAll();
